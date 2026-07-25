@@ -35,14 +35,16 @@ export default function PremiumBusinessForm() {
     age: "",
     gender: "",
     type: "",
-    address: "",
+    pincode: "",
     phone: "",
+    email: "",
   });
 
   const [imageUri, setImageUri] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
 
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
@@ -63,9 +65,17 @@ export default function PremiumBusinessForm() {
   ];
 
   const handleChange = (field, value) => {
-    setFormData({
-      ...formData,
-      [field]: value,
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+
+      // Email Address is required by the backend, but we no longer show it
+      // to the user — auto-generate a valid one from their phone number
+      // instead, so the field can stay hidden.
+      if (field === "phone") {
+        updated.email = value.length === 10 ? `${value}@hdrss.in` : "";
+      }
+
+      return updated;
     });
 
     // Auto-calculate age from DOB
@@ -107,6 +117,11 @@ export default function PremiumBusinessForm() {
   const handleDOBChange = (text) => {
     const formatted = formatDOB(text);
     handleChange("dob", formatted);
+  };
+
+  const handlePincodeChange = (text) => {
+    const cleaned = text.replace(/[^\d]/g, '');
+    handleChange("pincode", cleaned);
   };
 
   // Request permission and pick image
@@ -238,7 +253,7 @@ export default function PremiumBusinessForm() {
       { key: 'gender', label: 'Gender' },
       { key: 'type', label: 'Type' },
       { key: 'dob', label: 'Date of Birth' },
-      { key: 'address', label: 'Address' },
+      { key: 'pincode', label: 'Pincode' },
     ];
 
     for (let field of requiredFields) {
@@ -271,6 +286,12 @@ export default function PremiumBusinessForm() {
       return false;
     }
 
+    // Validate pincode (6-digit Indian pincode)
+    if (formData.pincode.length !== 6 || !/^\d{6}$/.test(formData.pincode)) {
+      Alert.alert('Validation Error', 'Please enter a valid 6-digit pincode');
+      return false;
+    }
+
     return true;
   };
 
@@ -283,6 +304,14 @@ export default function PremiumBusinessForm() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
+    if (!hasPaid) {
+      Alert.alert(
+        'Payment Required',
+        'Please complete the payment via UPI before submitting your registration.'
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     const payload = {
@@ -291,8 +320,9 @@ export default function PremiumBusinessForm() {
       Age: parseInt(formData.age),
       Gender: formData.gender,
       Type: formData.type,
-      Address: formData.address.trim(),
+      Pincode: formData.pincode,
       MobileNumber: formData.phone,
+      EmailAddress: formData.email.trim(),
       image: uploadedImageUrl
     };
 
@@ -323,11 +353,13 @@ export default function PremiumBusinessForm() {
                   age: "",
                   gender: "",
                   type: "",
-                  address: "",
+                  pincode: "",
                   phone: "",
+                  email: "",
                 });
                 setImageUri(null);
                 setUploadedImageUrl(null);
+                setHasPaid(false);
               }
             }
           ]
@@ -360,17 +392,33 @@ export default function PremiumBusinessForm() {
   };
 
   // UPI Payment - no fixed amount, user enters it in their UPI app
+  // No form validation here — payment can be made independently of filling the fields.
   const handleUPIPayment = async () => {
-    if (!validateForm()) return;
+    // A unique transaction reference per attempt — several banks/PSPs need
+    // this to process the payment properly. Without it some banks silently
+    // fail or hang, which can look like "money not debited" even when
+    // nothing was wrong with the amount you entered.
+    const transactionRef = `HDRSS${Date.now()}`;
 
     const upiURL =
-      "upi://pay?pa=hdrss.in-1@oksbi&pn=Manager&cu=INR";
+      `upi://pay?pa=hdrss.in-1@oksbi&pn=Manager&cu=INR&tr=${transactionRef}&tn=${encodeURIComponent("HDRSS Premium Listing Fee")}`;
 
     try {
       const supported = await Linking.canOpenURL(upiURL);
 
       if (supported) {
         await Linking.openURL(upiURL);
+        // Opening the UPI app does NOT mean the payment succeeded — the user
+        // might cancel inside the app, or the bank might fail/delay it. So we
+        // ask them to confirm once they return, and only THEN mark it as paid.
+        Alert.alert(
+          'Confirm Payment',
+          'Have you completed the UPI payment?',
+          [
+            { text: "No, I haven't paid", style: 'cancel', onPress: () => setHasPaid(false) },
+            { text: "Yes, I've Paid", onPress: () => setHasPaid(true) },
+          ]
+        );
       } else {
         Alert.alert('Error', 'No UPI app found on your device');
       }
@@ -405,7 +453,7 @@ export default function PremiumBusinessForm() {
             isTablet && styles.headerTitleTablet,
           ]}
         >
-          CAUCUS Registration
+          VAAGAI Registration
         </Text>
 
         <Text style={styles.headerSubtitle}>
@@ -459,6 +507,50 @@ export default function PremiumBusinessForm() {
               <Text style={styles.imageUploadSubtext}>JPG, PNG (Max 5MB)</Text>
             </TouchableOpacity>
           )}
+        </View>
+
+        {/* PAYMENT SECTION - now sits directly below the image */}
+        <View style={styles.paymentCard}>
+          <View style={styles.paymentCardTopRow}>
+            <View style={styles.paymentIconCircle}>
+              <Ionicons
+                name={hasPaid ? "checkmark-circle" : "shield-checkmark"}
+                size={22}
+                color={hasPaid ? "#22c55e" : "#a72828"}
+              />
+            </View>
+            <View style={styles.paymentCardTextWrap}>
+              <Text style={styles.paymentCardTitle}>Premium Listing Fee</Text>
+              <Text style={styles.paymentCardSubtitle}>
+                {hasPaid
+                  ? "Payment initiated — you can now submit your registration"
+                  : "One-time featured business registration"}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.paymentDivider} />
+
+          <TouchableOpacity
+            style={[
+              styles.paymentButton,
+              hasPaid && styles.paymentButtonPaid,
+              (isSubmitting || isUploading) && styles.disabledButton,
+            ]}
+            activeOpacity={0.85}
+            onPress={handleUPIPayment}
+            disabled={isSubmitting || isUploading}
+          >
+            <Ionicons
+              name={hasPaid ? "checkmark-circle-outline" : "qr-code-outline"}
+              size={20}
+              color="#fff"
+              style={{ marginRight: 8 }}
+            />
+            <Text style={styles.buttonText}>
+              {hasPaid ? "Paid — Pay Again" : "Pay on UPI"}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Full Name */}
@@ -524,21 +616,28 @@ export default function PremiumBusinessForm() {
           editable={!isSubmitting}
         />
 
-        {/* Address */}
-        <Text style={styles.label}>Address *</Text>
+        {/* Pincode */}
+        <Text style={styles.label}>Pincode *</Text>
         <TextInput
-          placeholder="Enter your complete address"
+          placeholder="Enter 6-digit pincode"
           placeholderTextColor="#999"
-          style={[styles.input, styles.textArea]}
-          multiline
-          value={formData.address}
-          onChangeText={(text) => handleChange("address", text)}
+          style={styles.input}
+          value={formData.pincode}
+          onChangeText={handlePincodeChange}
+          keyboardType="numeric"
+          maxLength={6}
           editable={!isSubmitting}
         />
 
-        {/* Submit Button */}
+        {/* Submit Button - now the last element in the card. Stays active to tap,
+            but shows a locked look until payment is completed; handleSubmit
+            itself blocks the actual submission until hasPaid is true. */}
         <TouchableOpacity
-          style={[styles.submitButton, isSubmitting && styles.disabledButton]}
+          style={[
+            styles.submitButton,
+            !hasPaid && styles.submitButtonLocked,
+            isSubmitting && styles.disabledButton,
+          ]}
           activeOpacity={0.85}
           onPress={handleSubmit}
           disabled={isSubmitting || isUploading}
@@ -549,26 +648,15 @@ export default function PremiumBusinessForm() {
               <Text style={[styles.buttonText, { marginLeft: 10 }]}>Submitting...</Text>
             </View>
           ) : (
-            <Text style={styles.buttonText}>Submit Registration</Text>
+            <View style={styles.buttonLoading}>
+              {!hasPaid && (
+                <Ionicons name="lock-closed" size={16} color="#fff" style={{ marginRight: 8 }} />
+              )}
+              <Text style={styles.buttonText}>
+                {hasPaid ? "Submit Registration" : "Complete Payment to Submit"}
+              </Text>
+            </View>
           )}
-        </TouchableOpacity>
-
-        {/* PRICE BOX */}
-        <View style={styles.priceBox}>
-          <Text style={styles.priceTitle}>Premium Listing Fee</Text>
-          <Text style={styles.priceSubText}>
-            One-time featured business registration
-          </Text>
-        </View>
-
-        {/* PAYMENT BUTTON */}
-        <TouchableOpacity
-          style={[styles.paymentButton, (isSubmitting || isUploading) && styles.disabledButton]}
-          activeOpacity={0.85}
-          onPress={handleUPIPayment}
-          disabled={isSubmitting || isUploading}
-        >
-          <Text style={styles.buttonText}>Pay on UPI</Text>
         </TouchableOpacity>
       </View>
 
@@ -708,7 +796,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
 
- 
+
 
   headerTitle: {
     color: "#fff",
@@ -978,27 +1066,54 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  /* PRICE BOX */
-  priceBox: {
-    backgroundColor: "#fff5f5",
-    marginTop: 30,
-    paddingVertical: 24,
-    borderRadius: 20,
+  /* PAYMENT CARD - sits directly below the profile image */
+  paymentCard: {
+    backgroundColor: "#fff8f5",
+    marginTop: 16,
+    marginBottom: 6,
+    padding: 18,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#f3d8c2",
+  },
+
+  paymentCardTopRow: {
+    flexDirection: "row",
     alignItems: "center",
+  },
+
+  paymentIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
     borderWidth: 1,
     borderColor: "#f3caca",
   },
 
-  priceTitle: {
-    color: "#7f1d1d",
-    fontSize: 16,
-    fontWeight: "700",
+  paymentCardTextWrap: {
+    flex: 1,
   },
 
-  priceSubText: {
-    color: "#777",
-    marginTop: 8,
-    fontSize: 13,
+  paymentCardTitle: {
+    color: "#7f1d1d",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
+  paymentCardSubtitle: {
+    color: "#8a7267",
+    marginTop: 3,
+    fontSize: 12.5,
+  },
+
+  paymentDivider: {
+    height: 1,
+    backgroundColor: "#f0ded0",
+    marginVertical: 14,
   },
 
   /* BUTTONS */
@@ -1015,17 +1130,26 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
 
+  submitButtonLocked: {
+    backgroundColor: "#8a8a8a",
+  },
+
   paymentButton: {
     backgroundColor: "#a72828",
-    paddingVertical: 18,
-    borderRadius: 18,
+    paddingVertical: 15,
+    borderRadius: 14,
     alignItems: "center",
-    marginTop: 20,
-    elevation: 4,
+    justifyContent: "center",
+    flexDirection: "row",
+    elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+
+  paymentButtonPaid: {
+    backgroundColor: "#22c55e",
   },
 
   buttonText: {
@@ -1044,4 +1168,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#ccc",
     opacity: 0.6,
   },
-});
+})
