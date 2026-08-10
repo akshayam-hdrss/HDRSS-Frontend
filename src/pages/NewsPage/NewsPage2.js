@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   Linking,
   useWindowDimensions,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import YoutubePlayer from "react-native-youtube-iframe";
@@ -22,6 +24,112 @@ export default function NewsPage2({ navigation, route }) {
   const [playVideo, setPlayVideo] = useState(false);
 
   const news = route?.params?.news;
+
+  const [isTamil, setIsTamil] = useState(false);
+  const [translatedTitle, setTranslatedTitle] = useState("");
+  const [translatedDescription, setTranslatedDescription] = useState("");
+  const [translating, setTranslating] = useState(false);
+
+  const isAlreadyTamil = /[\u0B80-\u0BFF]/.test(news?.title || "");
+
+  const translateText = async (text, targetLang = "ta") => {
+    if (!text) return "";
+    
+    // Split into paragraphs to avoid character limit of free translator APIs
+    const paragraphs = text.split("\n").filter(p => p.trim() !== "");
+    const translatedParagraphs = [];
+    
+    for (const paragraph of paragraphs) {
+      if (paragraph.length > 300) {
+        // Split by sentences
+        const sentences = paragraph.match(/[^.!?]+[.!?]+(\s|$)/g) || [paragraph];
+        const translatedSentences = [];
+        for (const sentence of sentences) {
+          if (!sentence.trim()) continue;
+          try {
+            const res = await fetch(
+              `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
+                sentence.trim()
+              )}&langpair=en|${targetLang}`
+            );
+            const data = await res.json();
+            if (data.responseData && data.responseData.translatedText) {
+              translatedSentences.push(data.responseData.translatedText);
+            } else {
+              translatedSentences.push(sentence);
+            }
+          } catch (e) {
+            translatedSentences.push(sentence);
+          }
+        }
+        translatedParagraphs.push(translatedSentences.join(" "));
+      } else {
+        try {
+          const res = await fetch(
+            `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
+              paragraph.trim()
+            )}&langpair=en|${targetLang}`
+          );
+          const data = await res.json();
+          if (data.responseData && data.responseData.translatedText) {
+            translatedParagraphs.push(data.responseData.translatedText);
+          } else {
+            translatedParagraphs.push(paragraph);
+          }
+        } catch (e) {
+          translatedParagraphs.push(paragraph);
+        }
+      }
+    }
+    return translatedParagraphs.join("\n\n");
+  };
+
+  const handleTranslateToggle = async () => {
+    if (isTamil) {
+      setIsTamil(false);
+      return;
+    }
+
+    if (translatedTitle && translatedDescription) {
+      setIsTamil(true);
+      return;
+    }
+
+    try {
+      setTranslating(true);
+      const titleToTranslate = news?.title || "";
+      const descToTranslate = news?.description || "";
+
+      // Translate title
+      let tTitle = "";
+      try {
+        const res = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
+            titleToTranslate.trim()
+          )}&langpair=en|ta`
+        );
+        const data = await res.json();
+        tTitle = data.responseData?.translatedText || titleToTranslate;
+      } catch (e) {
+        tTitle = titleToTranslate;
+      }
+
+      // Translate description
+      const tDesc = await translateText(descToTranslate, "ta");
+
+      setTranslatedTitle(tTitle);
+      setTranslatedDescription(tDesc);
+      setIsTamil(true);
+    } catch (error) {
+      console.log("Translation error:", error);
+      Alert.alert(
+        "Translation Error",
+        "Failed to translate news. Please check your internet connection and try again."
+      );
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   if (!news) {
     return (
@@ -120,13 +228,34 @@ export default function NewsPage2({ navigation, route }) {
             ) : null}
           </View>
 
-          <Text style={styles.newsTitle}>{news.title}</Text>
+          {/* 🔹 Translate Button */}
+          {!isAlreadyTamil && (
+            <View style={styles.translateRow}>
+              <TouchableOpacity
+                style={[styles.translateBtn, isTamil && styles.translateBtnActive]}
+                onPress={handleTranslateToggle}
+                disabled={translating}
+                activeOpacity={0.7}
+              >
+                {translating ? (
+                  <ActivityIndicator size="small" color={isTamil ? "#fff" : "#93210A"} />
+                ) : (
+                  <Ionicons name="language-outline" size={isTablet ? 16 : 14} color={isTamil ? "#fff" : "#93210A"} />
+                )}
+                <Text style={[styles.translateBtnText, isTamil && styles.translateBtnTextActive]}>
+                  {translating ? "Translating..." : isTamil ? "Show English" : "Translate to Tamil (தமிழ்)"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <Text style={styles.newsTitle}>{isTamil ? translatedTitle : news.title}</Text>
 
           <View style={styles.divider} />
 
           {/* 🔹 FULL description - no truncation */}
           <Text style={styles.newsText}>
-            {news.description || "No description available."}
+            {isTamil ? translatedDescription : (news.description || "No description available.")}
           </Text>
 
           {/* 🔹 Read Full Article */}
@@ -293,6 +422,39 @@ const getStyles = (isTablet, screenWidth) =>
       fontWeight: "800",
       color: "#301913",
       lineHeight: isTablet ? 33 : 26,
+    },
+
+    translateRow: {
+      flexDirection: "row",
+      justifyContent: "flex-end",
+      marginBottom: 12,
+    },
+
+    translateBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      borderWidth: 1.2,
+      borderColor: "#93210A",
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 18,
+      backgroundColor: "#fff",
+    },
+
+    translateBtnActive: {
+      backgroundColor: "#93210A",
+      borderColor: "#93210A",
+    },
+
+    translateBtnText: {
+      fontSize: isTablet ? 13 : 11,
+      fontWeight: "700",
+      color: "#93210A",
+    },
+
+    translateBtnTextActive: {
+      color: "#fff",
     },
 
     divider: {
