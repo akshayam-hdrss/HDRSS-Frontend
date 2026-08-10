@@ -153,6 +153,7 @@ import ProductScreenCheckout from "./pages/ProductItems/ProductScreenCheckout.js
 import ProductScreenOrderConfirm from "./pages/ProductItems/ProductScreenOrderConfirm.js";
 import ProductScreenOrder from "./pages/ProductItems/ProductScreenOrder.js";
 import AllEventsPage from "./components/Events/EventPage1all events.js";
+import Gurukulamcategory from "./pages/Gurukulam/Gurukulamcategory.js";
 
 
 
@@ -326,6 +327,7 @@ function MainStackScreen() {
      <MainStack.Screen name="ProductScreen2"component={withFooter(ProductScreen2)}/>
      <MainStack.Screen name="ProductScreen3"component={withFooter(ProductScreen3)}/>
      <MainStack.Screen name="ProductScreen4"component={withFooter(ProductScreen4)}/>
+     <MainStack.Screen name="Gurukulamcategory"component={withFooter(Gurukulamcategory)}/>
      <MainStack.Screen name="GurukulamPage1"component={withFooter(GurukulamPage1)}/>
      <MainStack.Screen name="GurukulamPage2"component={withFooter(GurukulamPage2)}/>
      <MainStack.Screen name="QuizCategories" component={withFooter(QuizCategories)}/>

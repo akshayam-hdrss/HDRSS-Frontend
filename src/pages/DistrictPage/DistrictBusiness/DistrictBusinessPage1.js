@@ -10,6 +10,7 @@ import {
   Dimensions,
   StatusBar,
   Platform,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -22,16 +23,15 @@ const isLargeTablet = screenWidth >= 1024;
 
 // 2 Default ad images
 const DEFAULT_AD_IMAGES = [
-  "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=800&h=400&fit=crop", // Business meeting
-  "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=400&fit=crop", // Office workspace
+  "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=800&h=400&fit=crop",
+  "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=400&fit=crop",
 ];
 
-// Get default images (always returns both)
 const getDefaultAdImages = () => [...DEFAULT_AD_IMAGES];
 
 export default function DistrictBusinessPage1() {
   const route = useRoute();
-  const navigation = useNavigation();                      
+  const navigation = useNavigation();
 
   const { businessId, businessName, districtId = 16 } = route.params || {};
 
@@ -42,7 +42,6 @@ export default function DistrictBusinessPage1() {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [imageErrors, setImageErrors] = useState({});
   
-  // Refs for auto-scroll
   const flatListRef = useRef(null);
   const scrollInterval = useRef(null);
 
@@ -54,7 +53,10 @@ export default function DistrictBusinessPage1() {
         const res = await axios.get(url);
 
         if (res.data?.resultData && Array.isArray(res.data.resultData)) {
-          setBusinessList(res.data.resultData);
+          const sortedBusiness = res.data.resultData.sort((a, b) =>
+            (a.name || "").localeCompare(b.name || "")
+          );
+          setBusinessList(sortedBusiness);
         } else {
           setBusinessList([]);
         }
@@ -68,7 +70,7 @@ export default function DistrictBusinessPage1() {
     fetchBusiness();
   }, [businessId]);
 
-  // Fetch Advertisement Images using new API - pageLevel 2, entityId is businessId
+  // Fetch Advertisement Images
   useEffect(() => {
     const fetchAdvertisement = async () => {
       try {
@@ -79,26 +81,21 @@ export default function DistrictBusinessPage1() {
         if (res.data && Array.isArray(res.data) && res.data.length > 0) {
           const firstAd = res.data[0];
           if (firstAd.adImages && Array.isArray(firstAd.adImages) && firstAd.adImages.length > 0) {
-            // Filter out any empty/null image URLs
             const validImages = firstAd.adImages.filter(img => img && img.trim() !== "");
             
             if (validImages.length > 0) {
               setAdvertisementImages(validImages);
             } else {
-              // If no valid images, show 2 default images
               setAdvertisementImages(getDefaultAdImages());
             }
           } else {
-            // If no adImages array or empty array, show 2 default images
             setAdvertisementImages(getDefaultAdImages());
           }
         } else {
-          // If no data or empty array in response, show 2 default images
           setAdvertisementImages(getDefaultAdImages());
         }
       } catch (err) {
-        console.log("❌ Error fetching advertisement for Page 1:", err);
-        // On error, show 2 default images
+        console.log("❌ Error fetching advertisement:", err);
         setAdvertisementImages(getDefaultAdImages());
       } finally {
         setAdLoading(false);
@@ -108,7 +105,6 @@ export default function DistrictBusinessPage1() {
     if (districtId && businessId) {
       fetchAdvertisement();
     } else {
-      // If no districtId or businessId, still show 2 default ads
       setAdvertisementImages(getDefaultAdImages());
       setAdLoading(false);
     }
@@ -116,38 +112,30 @@ export default function DistrictBusinessPage1() {
 
   // Handle image load error
   const handleImageError = (index) => {
-    
     setImageErrors(prev => ({ ...prev, [index]: true }));
     
-    // Replace the failed image with a default image
     if (advertisementImages[index]) {
       const newImages = [...advertisementImages];
-      // Use one of the default images based on index
       const defaultIndex = index % DEFAULT_AD_IMAGES.length;
       newImages[index] = DEFAULT_AD_IMAGES[defaultIndex];
       setAdvertisementImages(newImages);
     }
   };
 
-  // Auto-scroll functionality for ads (always auto-scroll since we have at least 2 images)
+  // Auto-scroll functionality for ads
   useEffect(() => {
     if (advertisementImages.length > 0 && flatListRef.current) {
-      // Clear any existing interval
       if (scrollInterval.current) {
         clearInterval(scrollInterval.current);
       }
 
-      // Set up new interval for auto-scroll
       scrollInterval.current = setInterval(() => {
         setCurrentAdIndex((prevIndex) => {
           let nextIndex = prevIndex + 1;
-          
-          // If reached the end, go back to start
           if (nextIndex >= advertisementImages.length) {
             nextIndex = 0;
           }
           
-          // Scroll to the next ad
           if (flatListRef.current) {
             try {
               flatListRef.current.scrollToOffset({
@@ -161,9 +149,8 @@ export default function DistrictBusinessPage1() {
           
           return nextIndex;
         });
-      }, 3000); // Change ad every 3 seconds
+      }, 3000);
 
-      // Clean up interval on unmount
       return () => {
         if (scrollInterval.current) {
           clearInterval(scrollInterval.current);
@@ -181,7 +168,6 @@ export default function DistrictBusinessPage1() {
     }
   };
 
-  // Handle scroll end
   const handleMomentumScrollEnd = (event) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
     const newIndex = Math.round(contentOffsetX / screenWidth);
@@ -201,7 +187,6 @@ export default function DistrictBusinessPage1() {
       );
     }
 
-    // Always show advertisement banner (with at least 2 default images)
     return (
       <View style={[styles.adContainer, isTablet && styles.adContainerTablet]}>
         <FlatList
@@ -237,36 +222,19 @@ export default function DistrictBusinessPage1() {
           snapToAlignment="center"
           decelerationRate="fast"
         />
-
-        {/* Pagination Dots - Always show since we have at least 2 images
-        {advertisementImages.length > 0 && (
-          <View style={styles.paginationContainer}>
-            {advertisementImages.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.paginationDot,
-                  index === currentAdIndex ? styles.paginationDotActive : styles.paginationDotInactive
-                ]}
-              />
-            ))}
-          </View>
-        )} */}
       </View>
     );
   };
 
   if (loading) {
-    return (
-     <Loader/>
-    );
+    return <Loader />;
   }
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#93210A" />
       
-      {/* Header */}
+      {/* Header - Fixed at top */}
       <View style={[styles.appBar, isTablet && styles.appBarTablet]}>
         <TouchableOpacity 
           onPress={() => navigation.goBack()} 
@@ -282,56 +250,64 @@ export default function DistrictBusinessPage1() {
         <View style={{ width: isTablet ? 40 : 30 }} />
       </View>
 
-      {/* Advertisement Banner - Always show (with at least 2 default images) */}
-      {renderAdvertisement()}
+      {/* ScrollView for content below header */}
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollViewContent}
+      >
+        {/* Advertisement Banner */}
+        {renderAdvertisement()}
 
-      {/* Business List */}
-      <FlatList
-        data={businessList}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={isTablet ? 3 : 2}
-        contentContainerStyle={[
-          styles.listContainer, 
-          isTablet && styles.listContainerTablet,
-          { paddingTop: 10 }
-        ]}
-        columnWrapperStyle={isTablet && styles.columnWrapper}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.card, isTablet && styles.cardTablet]}
-            onPress={() =>
-              navigation.navigate("DistrictBusinessPage2", {
-                businessId: item.id,
-                businessName: item.name,
-                districtId: districtId,
-              })
-            }
-            activeOpacity={0.8}
-          >
-            <Image
-              source={{
-                uri:
-                  item.imageUrl?.trim() !== ""
-                    ? item.imageUrl
-                    : "https://via.placeholder.com/200x200?text=No+Image",
-              }}
-              style={[styles.image, isTablet && styles.imageTablet]}
-              resizeMode="cover"
-            />
-            <Text style={[styles.name, isTablet && styles.nameTablet]}>
-              {item.name}
-            </Text>
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="business-outline" size={60} color="#ccc" />
-            <Text style={[styles.emptyText, isTablet && styles.emptyTextTablet]}>
-              No businesses found
-            </Text>
-          </View>
-        }
-      />
+        {/* Business List */}
+        <FlatList
+          data={businessList}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={isTablet ? 3 : 2}
+          contentContainerStyle={[
+            styles.listContainer, 
+            isTablet && styles.listContainerTablet,
+            { paddingTop: advertisementImages.length > 0 ? 10 : 16 }
+          ]}
+          columnWrapperStyle={isTablet && styles.columnWrapper}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[styles.card, isTablet && styles.cardTablet]}
+              onPress={() =>
+                navigation.navigate("DistrictBusinessPage2", {
+                  businessId: item.id,
+                  businessName: item.name,
+                  districtId: districtId,
+                })
+              }
+              activeOpacity={0.8}
+            >
+              <Image
+                source={{
+                  uri:
+                    item.imageUrl?.trim() !== ""
+                      ? item.imageUrl
+                      : "https://via.placeholder.com/200x200?text=No+Image",
+                }}
+                style={[styles.image, isTablet && styles.imageTablet]}
+                resizeMode="cover"
+              />
+              <Text style={[styles.name, isTablet && styles.nameTablet]}>
+                {item.name}
+              </Text>
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="business-outline" size={60} color="#ccc" />
+              <Text style={[styles.emptyText, isTablet && styles.emptyTextTablet]}>
+                No businesses found
+              </Text>
+            </View>
+          }
+          scrollEnabled={false}
+        />
+      </ScrollView>
     </View>
   );
 }
@@ -339,43 +315,36 @@ export default function DistrictBusinessPage1() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F7F4EF",
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FED8B1",
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: "#E37714",
-    fontWeight: "600",
-  },
-  loadingTextTablet: {
-    fontSize: 16,
-    marginTop: 15,
+    backgroundColor: "#fff",
   },
 
-  // Header - Mobile
+  // ScrollView
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+  },
+
+  // Header - Mobile (Fixed at top)
   appBar: {
     height: 90,
     paddingTop: Platform.OS === 'ios' ? 40 : 30,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#5C4033",
+    backgroundColor: "#93210A",
     justifyContent: "space-between",
     elevation: 6,
     shadowColor: "#93210A",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
+    zIndex: 1000,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
+    paddingBottom: 12,
   },
-  // Header - Tablet
   appBarTablet: {
     height: 100,
     paddingTop: Platform.OS === 'ios' ? 45 : 35,
@@ -392,7 +361,6 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
 
-  // Header Title - Mobile
   appBarTitle: {
     fontSize: 20,
     fontWeight: "700",
@@ -400,19 +368,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flex: 1,
   },
-  // Header Title - Tablet
   appBarTitleTablet: {
     fontSize: 24,
   },
 
-  // Advertisement Container - Full Edge
+  // Advertisement Container
   adContainer: {
     backgroundColor: "#f5f5f5",
     height: 200,
     width: screenWidth,
     overflow: "hidden",
   },
-  // Advertisement Container - Tablet
   adContainerTablet: {
     height: 250,
   },
@@ -427,81 +393,49 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  // Ad Item - Full width
   adItem: {
     width: screenWidth,
     height: 200,
   },
-  // Ad Item - Tablet
   adItemTablet: {
     height: 250,
   },
 
-  // Ad Image - Full width
   adImage: {
     width: screenWidth,
     height: "100%",
   },
-  // Ad Image - Tablet
   adImageTablet: {
     width: screenWidth,
     height: "100%",
   },
 
-  // Pagination Dots
-  paginationContainer: {
-    flexDirection: "row",
-    position: "absolute",
-    bottom: 15,
-    alignSelf: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 15,
-  },
-  paginationDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginHorizontal: 3,
-  },
-  paginationDotActive: {
-    backgroundColor: "#E37714",
-    width: 16,
-  },
-  paginationDotInactive: {
-    backgroundColor: "rgba(255,255,255,0.5)",
-  },
-
-  // List Container - Mobile
+  // List Container
   listContainer: {
     padding: 10,
     paddingBottom: 20,
   },
-  // List Container - Tablet
   listContainerTablet: {
     padding: 16,
     paddingBottom: 30,
   },
 
-  // Column Wrapper - Tablet only
   columnWrapper: {
     justifyContent: "space-between",
     marginBottom: 16,
   },
 
-  // Card - Mobile (Simple Design)
+  // Card
   card: {
     width: "48%",
-    backgroundColor: "#6F4E37",
+    backgroundColor: "#fff",
     margin: "1%",
     padding: 12,
     borderRadius: 12,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#6F4E37",
+    borderColor: "#f0f0f0",
   },
-  // Card - Tablet (Simple Design)
   cardTablet: {
     width: "32%",
     padding: 16,
@@ -509,29 +443,27 @@ const styles = StyleSheet.create({
     margin: "0.66%",
   },
 
-  // Image - Mobile
+  // Image
   image: {
     width: "100%",
     height: 120,
     borderRadius: 8,
-    backgroundColor: "#6F4E37",
+    backgroundColor: "#f8f8f8",
   },
-  // Image - Tablet
   imageTablet: {
     height: 140,
     borderRadius: 10,
   },
 
-  // Name - Mobile
+  // Name
   name: {
     marginTop: 10,
-    fontSize: 16,
+    fontSize: 14,
     textAlign: "center",
     fontWeight: "600",
-    color: "#ffffff",
+    color: "#222",
     paddingHorizontal: 4,
   },
-  // Name - Tablet
   nameTablet: {
     fontSize: 18,
     marginTop: 12,

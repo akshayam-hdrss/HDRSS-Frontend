@@ -10,17 +10,44 @@ import {
   ActivityIndicator,
   Modal,
   Linking,
+  Image,
+  Modal as RNModal,
+  FlatList,
+  SafeAreaView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import { AuthContext } from "../../../context/AuthContext";
+import { useNavigation } from "@react-navigation/native";
 
-const APP_COLOR = "#93210A";
+const MAROON = "#93210A";
+const GOLD = "#D4AF37";
+const PARCHMENT = "#FBEEDB";
+const CARD_BG = "#FFFDF6";
+const DARK_BROWN = "#301913";
+
 const UPI_ID = "upi://pay?pa=hdrss.in-1@oksbi&pn=Manager&am=101&cu=INR";
 const AMOUNT = 101;
 
+const GENDER_OPTIONS = ["Male", "Female"];
+const RELIGION_OPTIONS = ["Hindu", "Christian", "Muslim", "Sikh", "Other"];
+const CASTE_OPTIONS = [
+  "Iyer", "Iyengar", "Mudaliar", "Naidu", "Nadar", "Vanniyar",
+  "Gounder", "Chettiar", "Pillai", "Reddiar", "Yadava",
+  "Adi Dravidar", "Other",
+];
+const PROFESSION_OPTIONS = [
+  "IT / Software", "Government Employee", "Business / Self-Employed",
+  "Doctor / Medical", "Teacher / Education", "Engineer", "Other",
+];
+const DISTRICT_OPTIONS = [
+  "Coimbatore", "Chennai", "Madurai", "Salem", "Trichy",
+  "Tirunelveli", "Erode", "Vellore", "Other",
+];
+
 const CreateMatrimonyProfile = () => {
+  const navigation = useNavigation();
   const { userData } = useContext(AuthContext);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -29,6 +56,8 @@ const CreateMatrimonyProfile = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [transactionId, setTransactionId] = useState("");
+  const [dropdownVisible, setDropdownVisible] = useState(null);
+  const [dropdownData, setDropdownData] = useState([]);
 
   const [formData, setFormData] = useState({
     userId: userData?.id || "",
@@ -59,8 +88,8 @@ const CreateMatrimonyProfile = () => {
     preferredDistrict: "",
     preferredEducation: "",
     phone: "",
-    paymentTransactionId: "", // Store transaction ID
-    paymentStatus: "pending", // pending, completed
+    paymentTransactionId: "",
+    paymentStatus: "pending",
   });
 
   const [errors, setErrors] = useState({});
@@ -72,13 +101,11 @@ const CreateMatrimonyProfile = () => {
       case 1:
         if (!formData.name.trim()) newErrors.name = "Name is required";
         else if (formData.name.length < 2) newErrors.name = "Name must be at least 2 characters";
-        
         if (!formData.gender) newErrors.gender = "Gender is required";
         if (!formData.dob) newErrors.dob = "Date of birth is required";
         if (!formData.age) newErrors.age = "Age is required";
         else if (isNaN(formData.age) || formData.age < 18 || formData.age > 100)
           newErrors.age = "Age must be between 18 and 100";
-        
         if (!formData.height) newErrors.height = "Height is required";
         if (!formData.imageUrl) newErrors.imageUrl = "Profile image is required";
         break;
@@ -113,39 +140,38 @@ const CreateMatrimonyProfile = () => {
   const handleChange = (key, value) => {
     if (key === "dob") {
       const age = calculateAge(value);
-      setFormData({
-        ...formData,
-        [key]: value,
-        age: age.toString(),
-      });
+      setFormData({ ...formData, [key]: value, age: age.toString() });
+    } else if (key === "phone") {
+      const cleaned = value.replace(/[^0-9]/g, '');
+      if (cleaned.length <= 10) {
+        setFormData({ ...formData, [key]: cleaned });
+      }
     } else {
-      setFormData({
-        ...formData,
-        [key]: value,
-      });
+      setFormData({ ...formData, [key]: value });
     }
-    if (errors[key]) {
-      setErrors({ ...errors, [key]: null });
-    }
+    if (errors[key]) setErrors({ ...errors, [key]: null });
   };
-  
+
   const calculateAge = (dobString) => {
     if (!dobString) return "";
-    const date = new Date(dobString);
+    const parts = dobString.split('/');
+    if (parts.length !== 3) return "";
+    const date = new Date(parts[2], parts[1] - 1, parts[0]);
     if (isNaN(date.getTime())) return "";
     const today = new Date();
     let age = today.getFullYear() - date.getFullYear();
     const m = today.getMonth() - date.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {
-      age--;
-    }
+    if (m < 0 || (m === 0 && today.getDate() < date.getDate())) age--;
     return age > 0 ? age : "";
   };
 
   const onDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      const formattedDate = selectedDate.toISOString().split('T')[0];
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const year = selectedDate.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
       handleChange("dob", formattedDate);
     }
   };
@@ -166,7 +192,6 @@ const CreateMatrimonyProfile = () => {
 
     if (!result.canceled && result.assets && result.assets[0]) {
       setUploadingImages(true);
-      
       const asset = result.assets[0];
       const uploadFormData = new FormData();
       uploadFormData.append("file", {
@@ -176,10 +201,12 @@ const CreateMatrimonyProfile = () => {
       });
 
       try {
-        const res = await axios.post("https://hdrss-backend.onrender.com/api/upload", uploadFormData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        
+        const res = await axios.post(
+          "https://hdrss-backend.onrender.com/api/upload",
+          uploadFormData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+
         if (res.data.fileUrl) {
           handleChange(imageType, res.data.fileUrl);
           Alert.alert("Success", `${imageType === "imageUrl" ? "Profile" : "Jathagam"} image uploaded successfully`);
@@ -195,18 +222,14 @@ const CreateMatrimonyProfile = () => {
     }
   };
 
-  // Initialize UPI Payment
   const initiatePayment = () => {
     setShowPaymentModal(true);
     setPaymentStatus("pending");
   };
 
-  // Open UPI App
   const openUpiApp = () => {
     const upiUrl = `upi://pay?pa=hdrss.in-1@oksbi&pn=Manager&am=101&cu=INR`;
-    
     Linking.openURL(upiUrl).catch(() => {
-      // Fallback: Show manual payment instructions
       Alert.alert(
         "UPI App Not Found",
         `Please manually transfer ₹${AMOUNT} to UPI ID: ${UPI_ID}\n\nAfter payment, enter the Transaction ID below.`,
@@ -215,36 +238,21 @@ const CreateMatrimonyProfile = () => {
     });
   };
 
-  // Verify and confirm payment
   const confirmPayment = async () => {
     if (!transactionId.trim()) {
       Alert.alert("Error", "Please enter the Transaction ID");
       return;
     }
-
     setPaymentStatus("verifying");
-    
-    // Here you can optionally verify the transaction with your backend
-    // For now, we'll accept it and proceed
-    
     try {
-      // Optional: Verify transaction with backend
-      // const verifyRes = await axios.post("https://your-backend.com/api/verify-payment", {
-      //   transactionId,
-      //   amount: AMOUNT,
-      //   upiId: UPI_ID
-      // });
-      
-      // For demo, we'll just accept
       handleChange("paymentTransactionId", transactionId);
       handleChange("paymentStatus", "completed");
       setPaymentStatus("success");
-      
+
       setTimeout(() => {
         setShowPaymentModal(false);
         createProfile();
       }, 1500);
-      
     } catch (error) {
       Alert.alert("Verification Failed", "Could not verify payment. Please try again or contact support.");
       setPaymentStatus("failed");
@@ -259,29 +267,21 @@ const CreateMatrimonyProfile = () => {
     }
   };
 
-  const prevStep = () => {
-    setStep(step - 1);
-  };
+  const prevStep = () => setStep(step - 1);
 
   const createProfile = async () => {
     setLoading(true);
     try {
       const response = await fetch("http://192.168.1.17:5000/api/matrimony/create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        Alert.alert(
-          "Success", 
-          "Profile created successfully! Your registration is complete."
-        );
-        // Reset form
+        Alert.alert("Success", "Profile created successfully! Your registration is complete.");
         setFormData({
           userId: userData?.id || "",
           imageUrl: "",
@@ -332,120 +332,218 @@ const CreateMatrimonyProfile = () => {
         Alert.alert("Error", "Please upload a profile image");
         return;
       }
-      // Show payment modal instead of direct submission
       initiatePayment();
     }
   };
 
-  const renderImageUploadSection = () => (
-    <View style={styles.imageUploadContainer}>
-      <Text style={styles.sectionSubtitle}>Profile Image *</Text>
-      <TouchableOpacity
-        style={styles.uploadButton}
-        onPress={() => pickImage("imageUrl")}
-        disabled={uploadingImages}
-      >
-        {uploadingImages ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.uploadButtonText}>
-            {formData.imageUrl ? "Change Profile Image" : "Upload Profile Image"}
-          </Text>
-        )}
-      </TouchableOpacity>
-      {formData.imageUrl ? (
-        <Text style={styles.uploadSuccess}>✓ Image uploaded successfully</Text>
-      ) : null}
-      {errors.imageUrl && <Text style={styles.errorText}>{errors.imageUrl}</Text>}
+  const openDropdown = (field, options) => {
+    setDropdownData(options);
+    setDropdownVisible(field);
+  };
 
-      <Text style={[styles.sectionSubtitle, { marginTop: 15 }]}>Jathagam Image (Optional)</Text>
-      <TouchableOpacity
-        style={[styles.uploadButton, styles.secondaryButton]}
-        onPress={() => pickImage("jathagamUrl")}
-        disabled={uploadingImages}
+  const selectOption = (field, value) => {
+    handleChange(field, value);
+    setDropdownVisible(null);
+  };
+
+  const renderDropdown = () => {
+    if (!dropdownVisible) return null;
+    
+    return (
+      <RNModal
+        transparent={true}
+        animationType="fade"
+        visible={!!dropdownVisible}
+        onRequestClose={() => setDropdownVisible(null)}
       >
-        {uploadingImages ? (
-          <ActivityIndicator color={APP_COLOR} />
-        ) : (
-          <Text style={[styles.uploadButtonText, styles.secondaryButtonText]}>
-            {formData.jathagamUrl ? "Change Jathagam Image" : "Upload Jathagam Image"}
-          </Text>
-        )}
-      </TouchableOpacity>
-      {formData.jathagamUrl ? (
-        <Text style={styles.uploadSuccess}>✓ Jathagam uploaded successfully</Text>
-      ) : null}
-    </View>
-  );
+        <TouchableOpacity 
+          style={styles.dropdownOverlay} 
+          activeOpacity={1} 
+          onPress={() => setDropdownVisible(null)}
+        >
+          <View style={styles.dropdownContainer}>
+            <FlatList
+              data={dropdownData}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => selectOption(dropdownVisible, item)}
+                >
+                  <Text style={styles.dropdownItemText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+              ListHeaderComponent={
+                <View style={styles.dropdownHeader}>
+                  <Text style={styles.dropdownHeaderText}>Select Option</Text>
+                </View>
+              }
+            />
+          </View>
+        </TouchableOpacity>
+      </RNModal>
+    );
+  };
 
   const renderInput = (placeholder, key, options = {}) => (
     <View style={styles.inputWrapper}>
+      <Text style={styles.inputLabel}>{placeholder}</Text>
       <TextInput
         placeholder={placeholder}
-        placeholderTextColor="#999"
+        placeholderTextColor="#b89a86"
         style={[styles.input, errors[key] && styles.inputError]}
         value={formData[key]}
         onChangeText={(text) => handleChange(key, text)}
         keyboardType={options.keyboardType || "default"}
-        secureTextEntry={options.secureTextEntry || false}
         editable={!options.disabled}
+        maxLength={options.maxLength}
       />
       {errors[key] && <Text style={styles.errorText}>{errors[key]}</Text>}
     </View>
   );
 
-  const renderStep1 = () => (
-    <View>
-      <Text style={styles.heading}>Basic Details</Text>
-      {renderImageUploadSection()}
-      {renderInput("Full Name", "name")}
-      {renderInput("Gender (Male/Female/Other)", "gender")}
-      
-      {/* Date of Birth with DatePicker */}
+  const renderSelectInput = (label, key, options) => {
+    const isOther = formData[key] === "Other";
+    return (
       <View style={styles.inputWrapper}>
-        <TouchableOpacity 
-          style={[styles.input, styles.dateInput]} 
-          onPress={() => setShowDatePicker(true)}
+        <Text style={styles.inputLabel}>{label}</Text>
+        <TouchableOpacity
+          style={[styles.input, styles.selectInput, errors[key] && styles.inputError]}
+          onPress={() => openDropdown(key, options)}
         >
-          <Text style={formData.dob ? styles.dateText : styles.placeholderText}>
-            {formData.dob || "Select Date of Birth"}
+          <Text style={formData[key] ? styles.selectText : styles.placeholderText}>
+            {formData[key] || `Select ${label}`}
           </Text>
+          <Text style={styles.dropdownArrow}>▾</Text>
         </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={formData.dob ? new Date(formData.dob) : new Date(2000, 0, 1)}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
-            maximumDate={new Date()}
+        {isOther && (
+          <TextInput
+            style={[styles.input, styles.otherInput, errors[key] && styles.inputError]}
+            placeholder={`Specify ${label}`}
+            placeholderTextColor="#b89a86"
+            value={formData[`${key}Other`] || ""}
+            onChangeText={(text) => handleChange(key, text)}
           />
         )}
-        {errors.dob && <Text style={styles.errorText}>{errors.dob}</Text>}
+        {errors[key] && <Text style={styles.errorText}>{errors[key]}</Text>}
       </View>
-      
-      {renderInput("Age", "age", { keyboardType: "numeric", disabled: true })}
-      {renderInput("Height (cm)", "height", { keyboardType: "numeric" })}
-      
-      <TouchableOpacity style={styles.button} onPress={nextStep}>
-        <Text style={styles.buttonText}>Next</Text>
+    );
+  };
+
+  const renderChipSelector = (label, key, options) => (
+    <View style={styles.inputWrapper}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <View style={styles.chipsWrap}>
+        {options.map((opt) => (
+          <TouchableOpacity
+            key={opt}
+            style={[styles.chip, formData[key] === opt && styles.chipActive]}
+            onPress={() => handleChange(key, opt)}
+          >
+            <Text style={[styles.chipText, formData[key] === opt && styles.chipTextActive]}>
+              {opt}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      {errors[key] && <Text style={styles.errorText}>{errors[key]}</Text>}
+    </View>
+  );
+
+  const renderCard = (children) => <View style={styles.card}>{children}</View>;
+
+  const renderStep1 = () => (
+    <View>
+      {renderCard(
+        <>
+          <View style={styles.avatarSection}>
+            <TouchableOpacity
+              style={styles.avatarCircle}
+              onPress={() => pickImage("imageUrl")}
+              disabled={uploadingImages}
+              activeOpacity={0.85}
+            >
+              {uploadingImages ? (
+                <ActivityIndicator color={MAROON} />
+              ) : formData.imageUrl ? (
+                <Image source={{ uri: formData.imageUrl }} style={styles.avatarImage} />
+              ) : (
+                <Text style={styles.avatarPlaceholder}>+</Text>
+              )}
+            </TouchableOpacity>
+            <Text style={styles.avatarLabel}>
+              {formData.imageUrl ? "Tap to change profile photo" : "Add Profile Photo *"}
+            </Text>
+            {errors.imageUrl && <Text style={styles.errorText}>{errors.imageUrl}</Text>}
+
+            <TouchableOpacity
+              style={styles.jathagamLink}
+              onPress={() => pickImage("jathagamUrl")}
+              disabled={uploadingImages}
+            >
+              <Text style={styles.jathagamLinkText}>
+                {formData.jathagamUrl ? "✓ Jathagam uploaded — tap to change" : "+ Add Jathagam Image (optional)"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+
+      {renderCard(
+        <>
+          {renderInput("Full Name", "name")}
+          {renderChipSelector("Gender", "gender", GENDER_OPTIONS)}
+
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>Date of Birth</Text>
+            <TouchableOpacity
+              style={[styles.input, styles.dateInput]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={formData.dob ? styles.dateText : styles.placeholderText}>
+                {formData.dob || "DD/MM/YYYY"}
+              </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={formData.dob ? new Date(formData.dob.split('/').reverse().join('-')) : new Date(2000, 0, 1)}
+                mode="date"
+                display="default"
+                onChange={onDateChange}
+                maximumDate={new Date()}
+              />
+            )}
+            {errors.dob && <Text style={styles.errorText}>{errors.dob}</Text>}
+          </View>
+
+          {renderInput("Age", "age", { keyboardType: "numeric", disabled: true })}
+          {renderInput("Height (cm)", "height", { keyboardType: "numeric" })}
+        </>
+      )}
+
+      <TouchableOpacity style={styles.primaryButton} onPress={nextStep}>
+        <Text style={styles.primaryButtonText}>Continue</Text>
       </TouchableOpacity>
     </View>
   );
 
   const renderStep2 = () => (
     <View>
-      <Text style={styles.heading}>Horoscope & Religious Details</Text>
-      {renderInput("Natchathiram (Birth Star)", "natchathiram")}
-      {renderInput("Raasi (Zodiac)", "raasi")}
-      {renderInput("Time of Birth (HH:MM)", "timeOfBirth")}
-      {renderInput("Religion", "religion")}
-      {renderInput("Caste/Community", "caste")}
+      {renderCard(
+        <>
+          {renderInput("Natchathiram (Birth Star)", "natchathiram")}
+          {renderInput("Raasi (Zodiac)", "raasi")}
+          {renderInput("Time of Birth (HH:MM)", "timeOfBirth")}
+          {renderSelectInput("Religion", "religion", RELIGION_OPTIONS)}
+          {renderSelectInput("Caste / Community", "caste", CASTE_OPTIONS)}
+        </>
+      )}
       <View style={styles.row}>
-        <TouchableOpacity style={styles.smallButton} onPress={prevStep}>
-          <Text style={styles.buttonText}>Back</Text>
+        <TouchableOpacity style={styles.outlineButton} onPress={prevStep}>
+          <Text style={styles.outlineButtonText}>Back</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.smallButton} onPress={nextStep}>
-          <Text style={styles.buttonText}>Next</Text>
+        <TouchableOpacity style={styles.primaryButtonHalf} onPress={nextStep}>
+          <Text style={styles.primaryButtonText}>Continue</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -453,20 +551,23 @@ const CreateMatrimonyProfile = () => {
 
   const renderStep3 = () => (
     <View>
-      <Text style={styles.heading}>Family & Location Details</Text>
-      {renderInput("Father's Name", "father")}
-      {renderInput("Mother's Name", "mother")}
-      {renderInput("Father's Occupation", "fatherWork")}
-      {renderInput("Mother's Occupation", "motherWork")}
-      {renderInput("Full Address", "address")}
-      {renderInput("District", "district")}
-      {renderInput("Mother Tongue", "motherTongue")}
+      {renderCard(
+        <>
+          {renderInput("Father's Name", "father")}
+          {renderInput("Mother's Name", "mother")}
+          {renderInput("Father's Occupation", "fatherWork")}
+          {renderInput("Mother's Occupation", "motherWork")}
+          {renderInput("Full Address", "address")}
+          {renderInput("District", "district")}
+          {renderInput("Mother Tongue", "motherTongue")}
+        </>
+      )}
       <View style={styles.row}>
-        <TouchableOpacity style={styles.smallButton} onPress={prevStep}>
-          <Text style={styles.buttonText}>Back</Text>
+        <TouchableOpacity style={styles.outlineButton} onPress={prevStep}>
+          <Text style={styles.outlineButtonText}>Back</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.smallButton} onPress={nextStep}>
-          <Text style={styles.buttonText}>Next</Text>
+        <TouchableOpacity style={styles.primaryButtonHalf} onPress={nextStep}>
+          <Text style={styles.primaryButtonText}>Continue</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -474,18 +575,21 @@ const CreateMatrimonyProfile = () => {
 
   const renderStep4 = () => (
     <View>
-      <Text style={styles.heading}>Professional & Contact Details</Text>
-      {renderInput("Highest Education", "education")}
-      {renderInput("Profession / Job Title", "profession")}
-      {renderInput("Annual Salary (Lakhs)", "salary", { keyboardType: "numeric" })}
-      {renderInput("Work Location", "workLocation")}
-      {renderInput("Phone Number", "phone", { keyboardType: "phone-pad" })}
+      {renderCard(
+        <>
+          {renderInput("Highest Education", "education")}
+          {renderSelectInput("Profession", "profession", PROFESSION_OPTIONS)}
+          {renderInput("Annual Salary (Lakhs)", "salary", { keyboardType: "numeric" })}
+          {renderInput("Work Location", "workLocation")}
+          {renderInput("Phone Number", "phone", { keyboardType: "phone-pad", maxLength: 10 })}
+        </>
+      )}
       <View style={styles.row}>
-        <TouchableOpacity style={styles.smallButton} onPress={prevStep}>
-          <Text style={styles.buttonText}>Back</Text>
+        <TouchableOpacity style={styles.outlineButton} onPress={prevStep}>
+          <Text style={styles.outlineButtonText}>Back</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.smallButton} onPress={nextStep}>
-          <Text style={styles.buttonText}>Next</Text>
+        <TouchableOpacity style={styles.primaryButtonHalf} onPress={nextStep}>
+          <Text style={styles.primaryButtonText}>Continue</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -493,27 +597,29 @@ const CreateMatrimonyProfile = () => {
 
   const renderStep5 = () => (
     <View>
-      <Text style={styles.heading}>Partner Preferences</Text>
-      {renderInput("Preferred Age Range (e.g., 25-30)", "preferredAge")}
-      {renderInput("Preferred District", "preferredDistrict")}
-      {renderInput("Preferred Education Level", "preferredEducation")}
-      
-      {/* Payment Info */}
-      <View style={styles.paymentInfo}>
-        <Text style={styles.paymentTitle}>Registration Fee: ₹{AMOUNT}</Text>
-        <Text style={styles.paymentSubtitle}>UPI ID: {UPI_ID}</Text>
+      {renderCard(
+        <>
+          {renderInput("Preferred Age Range (e.g., 25-30)", "preferredAge")}
+          {renderSelectInput("Preferred District", "preferredDistrict", DISTRICT_OPTIONS)}
+          {renderInput("Preferred Education Level", "preferredEducation")}
+        </>
+      )}
+
+      <View style={styles.paymentInfoCard}>
+        <Text style={styles.paymentInfoLabel}>Registration Fee</Text>
+        <Text style={styles.paymentInfoAmount}>₹{AMOUNT}</Text>
       </View>
-      
+
       <View style={styles.row}>
-        <TouchableOpacity style={styles.smallButton} onPress={prevStep}>
-          <Text style={styles.buttonText}>Back</Text>
+        <TouchableOpacity style={styles.outlineButton} onPress={prevStep}>
+          <Text style={styles.outlineButtonText}>Back</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.smallButton, loading && styles.disabledButton]}
+          style={[styles.primaryButtonHalf, loading && styles.disabledButton]}
           onPress={handleSubmitWithPayment}
           disabled={loading}
         >
-          <Text style={styles.buttonText}>
+          <Text style={styles.primaryButtonText}>
             {loading ? "Processing..." : `Pay ₹${AMOUNT} & Submit`}
           </Text>
         </TouchableOpacity>
@@ -521,65 +627,60 @@ const CreateMatrimonyProfile = () => {
     </View>
   );
 
-  // Payment Modal
   const renderPaymentModal = () => (
     <Modal
       visible={showPaymentModal}
-      transparent={true}
+      transparent
       animationType="slide"
-      onRequestClose={() => !paymentStatus === "verifying" && setShowPaymentModal(false)}
+      onRequestClose={() => paymentStatus !== "verifying" && setShowPaymentModal(false)}
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
+          <View style={styles.modalTopLine} />
           <Text style={styles.modalTitle}>Complete Payment</Text>
-          
+
           {paymentStatus === "pending" && (
             <>
               <View style={styles.paymentDetails}>
                 <Text style={styles.paymentAmount}>₹{AMOUNT}</Text>
                 <Text style={styles.paymentUpi}>UPI ID: {UPI_ID}</Text>
               </View>
-              
+
               <TouchableOpacity style={styles.payButton} onPress={openUpiApp}>
                 <Text style={styles.payButtonText}>Pay with UPI App</Text>
               </TouchableOpacity>
-              
+
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
                 <Text style={styles.dividerText}>OR</Text>
                 <View style={styles.dividerLine} />
               </View>
-              
+
               <TextInput
                 style={styles.transactionInput}
                 placeholder="Enter Transaction ID after payment"
+                placeholderTextColor="#b89a86"
                 value={transactionId}
                 onChangeText={setTransactionId}
               />
-              
-              <TouchableOpacity 
-                style={styles.confirmButton}
-                onPress={confirmPayment}
-              >
+
+              <TouchableOpacity style={styles.confirmButton} onPress={confirmPayment}>
                 <Text style={styles.confirmButtonText}>Confirm Payment</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.cancelButton}
-                onPress={() => setShowPaymentModal(false)}
-              >
+
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setShowPaymentModal(false)}>
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
             </>
           )}
-          
+
           {paymentStatus === "verifying" && (
             <View style={styles.verifyingContainer}>
-              <ActivityIndicator size="large" color={APP_COLOR} />
+              <ActivityIndicator size="large" color={MAROON} />
               <Text style={styles.verifyingText}>Verifying Payment...</Text>
             </View>
           )}
-          
+
           {paymentStatus === "success" && (
             <View style={styles.successContainer}>
               <Text style={styles.successIcon}>✓</Text>
@@ -587,15 +688,12 @@ const CreateMatrimonyProfile = () => {
               <Text style={styles.successSubtext}>Creating your profile...</Text>
             </View>
           )}
-          
+
           {paymentStatus === "failed" && (
             <View style={styles.failedContainer}>
               <Text style={styles.failedIcon}>✗</Text>
               <Text style={styles.failedText}>Payment Verification Failed</Text>
-              <TouchableOpacity 
-                style={styles.retryButton}
-                onPress={() => setPaymentStatus("pending")}
-              >
+              <TouchableOpacity style={styles.retryButton} onPress={() => setPaymentStatus("pending")}>
                 <Text style={styles.retryButtonText}>Try Again</Text>
               </TouchableOpacity>
             </View>
@@ -606,362 +704,614 @@ const CreateMatrimonyProfile = () => {
   );
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.title}>Matrimony Profile</Text>
-        <View style={styles.progressContainer}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <View style={styles.backCircle}>
+              <Text style={styles.backButtonText}>‹</Text>
+            </View>
+          </TouchableOpacity>
+          <Text style={styles.title}>Create Matrimony Profile</Text>
+          <View style={styles.headerRight} />
+        </View>
+        
+        <Text style={styles.stepLabel}>
+          Step {step} of 5
+        </Text>
+
+        <View style={styles.progressTrack}>
           {[1, 2, 3, 4, 5].map((s) => (
             <View
               key={s}
-              style={[
-                styles.progressDot,
-                step >= s && styles.progressDotActive,
-              ]}
+              style={[styles.progressSegment, step >= s && styles.progressSegmentActive]}
             />
           ))}
         </View>
-        <Text style={styles.step}>Step {step} of 5</Text>
       </View>
 
-      {step === 1 && renderStep1()}
-      {step === 2 && renderStep2()}
-      {step === 3 && renderStep3()}
-      {step === 4 && renderStep4()}
-      {step === 5 && renderStep5()}
-      
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <View style={styles.body}>
+          {step === 1 && renderStep1()}
+          {step === 2 && renderStep2()}
+          {step === 3 && renderStep3()}
+          {step === 4 && renderStep4()}
+          {step === 5 && renderStep5()}
+        </View>
+      </ScrollView>
+
       {renderPaymentModal()}
-    </ScrollView>
+      {renderDropdown()}
+    </SafeAreaView>
   );
 };
 
+export default CreateMatrimonyProfile;
+
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
-    paddingHorizontal: 20,
+    backgroundColor: PARCHMENT,
   },
+  
   header: {
+    backgroundColor: MAROON,
+    paddingTop: 12,
+    paddingBottom: 29,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 26,
+    borderBottomRightRadius: 26,
     alignItems: "center",
-    marginVertical: 30,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: APP_COLOR,
-    marginBottom: 15,
-  },
-  progressContainer: {
+  
+  headerTop: {
     flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 9,
+  },
+  
+  backButton: {
+    padding: 4,
+  },
+  
+  backCircle: {
+    width: 35,
+    height: 35,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.25)",
+    top:18
+  },
+  
+  backButtonText: {
+    fontSize: 36,
+    color: "#FFFDF6",
+    fontWeight: "300",
+    lineHeight: 32,
+   
+  },
+  
+  title: { 
+    fontSize: 19, 
+    fontWeight: "bold", 
+    color: "#FFFDF6", 
+    textAlign: "center",
+    flex: 1,
+    marginLeft: 4,
+    top:18
+  },
+  
+  headerRight: {
+    width: 48,
+  },
+  
+  stepLabel: { 
+    fontSize: 13, 
+    color: GOLD, 
+    marginTop: 4, 
+    fontWeight: "600" 
+  },
+  
+  progressTrack: { 
+    flexDirection: "row", 
+    marginTop: 12, 
+    width: "100%" 
+  },
+  
+  progressSegment: {
+    flex: 1,
+    height: 4,
+    backgroundColor: "rgba(251,238,219,0.25)",
+    borderRadius: 2,
+    marginHorizontal: 3,
+  },
+  
+  progressSegmentActive: { 
+    backgroundColor: GOLD 
+  },
+
+  scrollContainer: {
+    flex: 1,
+  },
+
+  body: { 
+    padding: 18, 
+    paddingBottom: 40 
+  },
+
+  card: {
+    backgroundColor: CARD_BG,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.3)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+
+  avatarSection: { 
+    alignItems: "center" 
+  },
+  
+  avatarCircle: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: PARCHMENT,
+    borderWidth: 3,
+    borderColor: GOLD,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
     marginBottom: 10,
   },
-  progressDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#ddd",
-    marginHorizontal: 4,
+  
+  avatarImage: { 
+    width: "100%", 
+    height: "100%" 
   },
-  progressDotActive: {
-    backgroundColor: APP_COLOR,
-    width: 20,
+  
+  avatarPlaceholder: { 
+    fontSize: 40, 
+    color: MAROON, 
+    fontWeight: "300" 
   },
-  step: {
-    fontSize: 14,
-    color: "#666",
+  
+  avatarLabel: { 
+    fontSize: 13, 
+    color: "#7a5c4f", 
+    fontWeight: "600" 
   },
-  heading: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: APP_COLOR,
-    paddingLeft: 12,
+  
+  jathagamLink: { 
+    marginTop: 14 
   },
-  sectionSubtitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#555",
-    marginBottom: 8,
+  
+  jathagamLinkText: { 
+    fontSize: 13, 
+    color: MAROON, 
+    fontWeight: "600", 
+    textDecorationLine: "underline" 
   },
-  inputWrapper: {
-    marginBottom: 12,
+
+  inputWrapper: { 
+    marginBottom: 16 
   },
+  
+  inputLabel: { 
+    fontSize: 13, 
+    fontWeight: "600", 
+    color: DARK_BROWN, 
+    marginBottom: 6 
+  },
+  
   input: {
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderWidth: 1.5,
+    borderColor: "rgba(212,175,55,0.4)",
     borderRadius: 12,
     paddingHorizontal: 15,
-    height: 52,
-    fontSize: 16,
+    height: 50,
+    fontSize: 15,
     backgroundColor: "#fff",
-    color: "#333",
+    color: DARK_BROWN,
   },
-  dateInput: {
-    justifyContent: "center",
+  
+  selectInput: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  dateText: {
-    fontSize: 16,
-    color: "#333",
+  
+  selectText: { 
+    fontSize: 15, 
+    color: DARK_BROWN 
   },
-  placeholderText: {
-    fontSize: 16,
-    color: "#999",
+  
+  dropdownArrow: { 
+    fontSize: 18, 
+    color: MAROON 
   },
-  inputError: {
-    borderColor: "#ff4444",
+  
+  otherInput: { 
+    marginTop: 8 
   },
-  errorText: {
-    color: "#ff4444",
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 12,
+  
+  dateInput: { 
+    justifyContent: "center" 
   },
-  button: {
-    backgroundColor: APP_COLOR,
-    height: 52,
+  
+  dateText: { 
+    fontSize: 15, 
+    color: DARK_BROWN 
+  },
+  
+  placeholderText: { 
+    fontSize: 15, 
+    color: "#b89a86" 
+  },
+  
+  inputError: { 
+    borderColor: "#c0392b" 
+  },
+  
+  errorText: { 
+    color: "#c0392b", 
+    fontSize: 12, 
+    marginTop: 4 
+  },
+
+  chipsWrap: { 
+    flexDirection: "row", 
+    flexWrap: "wrap" 
+  },
+  
+  chip: {
+    borderWidth: 1.5,
+    borderColor: MAROON,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginRight: 8,
+    marginBottom: 8,
+    backgroundColor: "#fff",
+  },
+  
+  chipActive: { 
+    backgroundColor: MAROON 
+  },
+  
+  chipText: { 
+    fontSize: 13, 
+    color: MAROON, 
+    fontWeight: "600" 
+  },
+  
+  chipTextActive: { 
+    color: "#FFFDF6" 
+  },
+
+  dropdownOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(48,25,19,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 12,
-    marginTop: 20,
-    marginBottom: 40,
-    shadowColor: APP_COLOR,
+  },
+  
+  dropdownContainer: {
+    backgroundColor: CARD_BG,
+    borderRadius: 16,
+    width: "85%",
+    maxHeight: "50%",
+    borderWidth: 1,
+    borderColor: GOLD,
+    overflow: "hidden",
+  },
+  
+  dropdownHeader: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(212,175,55,0.3)",
+    backgroundColor: MAROON,
+  },
+  
+  dropdownHeaderText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFDF6",
+    textAlign: "center",
+  },
+  
+  dropdownItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(212,175,55,0.2)",
+  },
+  
+  dropdownItemText: {
+    fontSize: 15,
+    color: DARK_BROWN,
+  },
+
+  primaryButton: {
+    backgroundColor: MAROON,
+    height: 54,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 14,
+    marginTop: 4,
+    marginBottom: 30,
+    borderWidth: 1,
+    borderColor: GOLD,
+    shadowColor: MAROON,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
   },
-  smallButton: {
-    backgroundColor: APP_COLOR,
+  
+  primaryButtonHalf: {
+    backgroundColor: MAROON,
     flex: 1,
-    height: 50,
+    height: 52,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 12,
-    marginHorizontal: 6,
-    shadowColor: APP_COLOR,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  row: {
-    flexDirection: "row",
-    marginTop: 20,
-    marginBottom: 50,
-  },
-  imageUploadContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  uploadButton: {
-    backgroundColor: APP_COLOR,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  secondaryButton: {
-    backgroundColor: "#fff",
-    borderWidth: 1.5,
-    borderColor: APP_COLOR,
-  },
-  uploadButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  secondaryButtonText: {
-    color: APP_COLOR,
-  },
-  uploadSuccess: {
-    color: "#28a745",
-    fontSize: 12,
-    marginTop: 5,
-    textAlign: "center",
-  },
-  disabledButton: {
-    backgroundColor: "#ccc",
-    shadowOpacity: 0,
-  },
-  paymentInfo: {
-    backgroundColor: "#fff3e0",
-    borderRadius: 12,
-    padding: 15,
-    marginTop: 20,
-    marginBottom: 10,
-    alignItems: "center",
+    borderRadius: 14,
+    marginLeft: 6,
     borderWidth: 1,
-    borderColor: APP_COLOR,
+    borderColor: GOLD,
   },
-  paymentTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: APP_COLOR,
+  
+  outlineButton: {
+    flex: 1,
+    height: 52,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 14,
+    marginRight: 6,
+    borderWidth: 1.5,
+    borderColor: MAROON,
+    backgroundColor: "transparent",
   },
-  paymentSubtitle: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 5,
+  
+  outlineButtonText: { 
+    color: MAROON, 
+    fontWeight: "bold", 
+    fontSize: 15 
   },
+  
+  primaryButtonText: { 
+    color: "#FFFDF6", 
+    fontWeight: "bold", 
+    fontSize: 15 
+  },
+  
+  disabledButton: { 
+    backgroundColor: "#c9a99f", 
+    borderColor: "#c9a99f", 
+    shadowOpacity: 0 
+  },
+  
+  row: { 
+    flexDirection: "row", 
+    marginTop: 4, 
+    marginBottom: 30 
+  },
+
+  paymentInfoCard: {
+    backgroundColor: CARD_BG,
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 6,
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: GOLD,
+  },
+  
+  paymentInfoLabel: { 
+    fontSize: 13, 
+    color: "#7a5c4f", 
+    fontWeight: "600" 
+  },
+  
+  paymentInfoAmount: { 
+    fontSize: 28, 
+    fontWeight: "bold", 
+    color: MAROON, 
+    marginTop: 4 
+  },
+
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(48,25,19,0.55)",
     justifyContent: "center",
     alignItems: "center",
   },
+  
   modalContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: PARCHMENT,
+    borderRadius: 24,
+    padding: 24,
     width: "85%",
     maxWidth: 400,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(212,175,55,0.4)",
   },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: APP_COLOR,
-    marginBottom: 20,
+  
+  modalTopLine: { 
+    width: 40, 
+    height: 3, 
+    backgroundColor: GOLD, 
+    borderRadius: 2, 
+    marginBottom: 14 
   },
-  paymentDetails: {
-    alignItems: "center",
-    marginBottom: 20,
+  
+  modalTitle: { 
+    fontSize: 20, 
+    fontWeight: "bold", 
+    color: MAROON, 
+    marginBottom: 20 
   },
-  paymentAmount: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: APP_COLOR,
+  
+  paymentDetails: { 
+    alignItems: "center", 
+    marginBottom: 20 
   },
-  paymentUpi: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 5,
+  
+  paymentAmount: { 
+    fontSize: 32, 
+    fontWeight: "bold", 
+    color: MAROON 
   },
+  
+  paymentUpi: { 
+    fontSize: 13, 
+    color: "#7a5c4f", 
+    marginTop: 5 
+  },
+  
   payButton: {
-    backgroundColor: APP_COLOR,
+    backgroundColor: MAROON,
     paddingVertical: 14,
-    paddingHorizontal: 30,
     borderRadius: 12,
     width: "100%",
     alignItems: "center",
     marginBottom: 15,
-  },
-  payButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 15,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#e0e0e0",
-  },
-  dividerText: {
-    marginHorizontal: 10,
-    color: "#999",
-  },
-  transactionInput: {
     borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 10,
+    borderColor: GOLD,
+  },
+  
+  payButtonText: { 
+    color: "#FFFDF6", 
+    fontWeight: "bold", 
+    fontSize: 15 
+  },
+  
+  divider: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    marginVertical: 12, 
+    width: "100%" 
+  },
+  
+  dividerLine: { 
+    flex: 1, 
+    height: 1, 
+    backgroundColor: "rgba(212,175,55,0.4)" 
+  },
+  
+  dividerText: { 
+    marginHorizontal: 10, 
+    color: "#7a5c4f", 
+    fontSize: 12 
+  },
+  
+  transactionInput: {
+    borderWidth: 1.5,
+    borderColor: "rgba(212,175,55,0.4)",
+    borderRadius: 12,
     paddingHorizontal: 15,
     height: 50,
     fontSize: 14,
     width: "100%",
     marginBottom: 15,
+    backgroundColor: "#fff",
+    color: DARK_BROWN,
   },
+  
   confirmButton: {
-    backgroundColor: "#28a745",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    backgroundColor: "#2e7d32",
+    paddingVertical: 13,
+    borderRadius: 12,
     width: "100%",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 8,
   },
-  confirmButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
+  
+  confirmButtonText: { 
+    color: "#fff", 
+    fontWeight: "bold", 
+    fontSize: 15 
   },
-  cancelButton: {
-    paddingVertical: 10,
+  
+  cancelButton: { 
+    paddingVertical: 8 
   },
-  cancelButtonText: {
-    color: "#666",
-    fontSize: 14,
+  
+  cancelButtonText: { 
+    color: "#7a5c4f", 
+    fontSize: 14 
   },
-  verifyingContainer: {
-    alignItems: "center",
-    paddingVertical: 30,
+  
+  verifyingContainer: { 
+    alignItems: "center", 
+    paddingVertical: 26 
   },
-  verifyingText: {
-    marginTop: 15,
-    fontSize: 16,
-    color: "#666",
+  
+  verifyingText: { 
+    marginTop: 14, 
+    fontSize: 15, 
+    color: "#7a5c4f" 
   },
-  successContainer: {
-    alignItems: "center",
-    paddingVertical: 30,
+  
+  successContainer: { 
+    alignItems: "center", 
+    paddingVertical: 26 
   },
-  successIcon: {
-    fontSize: 60,
-    color: "#28a745",
-    marginBottom: 15,
+  
+  successIcon: { 
+    fontSize: 54, 
+    color: "#2e7d32", 
+    marginBottom: 12 
   },
-  successText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#28a745",
-    marginBottom: 5,
+  
+  successText: { 
+    fontSize: 18, 
+    fontWeight: "bold", 
+    color: "#2e7d32", 
+    marginBottom: 4 
   },
-  successSubtext: {
-    fontSize: 14,
-    color: "#666",
+  
+  successSubtext: { 
+    fontSize: 13, 
+    color: "#7a5c4f" 
   },
-  failedContainer: {
-    alignItems: "center",
-    paddingVertical: 30,
+  
+  failedContainer: { 
+    alignItems: "center", 
+    paddingVertical: 26 
   },
-  failedIcon: {
-    fontSize: 60,
-    color: "#ff4444",
-    marginBottom: 15,
+  
+  failedIcon: { 
+    fontSize: 54, 
+    color: "#c0392b", 
+    marginBottom: 12 
   },
-  failedText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#ff4444",
-    marginBottom: 15,
+  
+  failedText: { 
+    fontSize: 16, 
+    fontWeight: "bold", 
+    color: "#c0392b", 
+    marginBottom: 14 
   },
-  retryButton: {
-    backgroundColor: APP_COLOR,
-    paddingVertical: 10,
-    paddingHorizontal: 25,
-    borderRadius: 8,
+  
+  retryButton: { 
+    backgroundColor: MAROON, 
+    paddingVertical: 10, 
+    paddingHorizontal: 22, 
+    borderRadius: 10 
   },
-  retryButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+  
+  retryButtonText: { 
+    color: "#FFFDF6", 
+    fontWeight: "bold" 
   },
 });
-
-export default CreateMatrimonyProfile;
