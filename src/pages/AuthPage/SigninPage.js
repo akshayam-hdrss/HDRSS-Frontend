@@ -38,21 +38,21 @@ export default function SignupPage({ navigation }) {
   const phoneRef = useRef(null);
   const passwordRef = useRef(null);
 
-  // 🌞 Animation setup for rotating sun
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 8000,
-        useNativeDriver: true,
-      })
-    ).start();
-  }, []);
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+  // 🌞 Animation setup for rotating sun - COMMENTED OUT
+  // const rotateAnim = useRef(new Animated.Value(0)).current;
+  // useEffect(() => {
+  //   Animated.loop(
+  //     Animated.timing(rotateAnim, {
+  //       toValue: 1,
+  //       duration: 8000,
+  //       useNativeDriver: true,
+  //     })
+  //   ).start();
+  // }, []);
+  // const spin = rotateAnim.interpolate({
+  //   inputRange: [0, 1],
+  //   outputRange: ["0deg", "360deg"],
+  // });
 
   // ✅ Format DOB as user types (DD/MM/YYYY)
   const formatDOB = (text) => {
@@ -243,16 +243,17 @@ export default function SignupPage({ navigation }) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          {/* 🌞 Rotating Sun Logo */}
+          {/* 🌞 Rotating Sun Logo - Rotation Removed */}
           <View style={styles.sunWrapper}>
-            <Animated.Image
-              source={require("../../../assets/Header/sunoutline.png")}
-              style={[styles.sunRays, { transform: [{ rotate: spin }] }]}
-            />
             <Image
+              source={require("../../../assets/Header/partner logo.png")}
+              style={[styles.sunRays]}
+              // style={[styles.sunRays, { transform: [{ rotate: spin }] }]} // Rotation removed
+            />
+            {/* <Image
               source={require("../../../assets/Header/sunlogo.png")}
               style={styles.sunCenter}
-            />
+            /> */}
           </View>
 
           {/* Title */}
@@ -427,8 +428,8 @@ const styles = StyleSheet.create({
     marginTop:7,
   },
   sunRays: {
-    width: 150,
-    height: 150,
+    width: 140,
+    height: 140,
     resizeMode: "contain",
   },
   sunCenter: {

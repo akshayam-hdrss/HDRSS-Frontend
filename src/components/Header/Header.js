@@ -11,7 +11,7 @@ import {
 import * as Font from "expo-font";
 
 export default function Header({ toggleSidebar }) {
-  const rotateAnim = useRef(new Animated.Value(0)).current;
+  // const rotateAnim = useRef(new Animated.Value(0)).current; // COMMENTED OUT
   const [fontLoaded, setFontLoaded] = useState(false);
   const { width } = useWindowDimensions();
 
@@ -27,22 +27,21 @@ export default function Header({ toggleSidebar }) {
     })();
   }, []);
 
+  // Rotation animation - COMMENTED OUT
+  // useEffect(() => {
+  //   Animated.loop(
+  //     Animated.timing(rotateAnim, {
+  //       toValue: 1,
+  //       duration: 8000,
+  //       useNativeDriver: true,
+  //     })
+  //   ).start();
+  // }, []);
 
-  // Rotation animation
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 8000,
-        useNativeDriver: true,
-      })
-    ).start();
-  }, []);
-
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+  // const spin = rotateAnim.interpolate({
+  //   inputRange: [0, 1],
+  //   outputRange: ["0deg", "360deg"],
+  // });
 
   if (!fontLoaded) {
     return (
@@ -106,12 +105,12 @@ export default function Header({ toggleSidebar }) {
         />
 
         <View style={styles.sunWrapper}>
-          <Animated.Image
-            source={require("../../../assets/Header/sunoutline.png")}
+          <Image
+            source={require("../../../assets/Header/partner logo.png")}
             style={[
               styles.sunRays,
               isTablet && styles.sunRaysTablet,
-              { transform: [{ rotate: spin }] },
+              // { transform: [{ rotate: spin }] }, // Rotation removed
             ]}
           />
 
@@ -125,13 +124,13 @@ export default function Header({ toggleSidebar }) {
                REGD.NO: 152/2021
           </Text>
 
-          <Image
+          {/* <Image
             source={require("../../../assets/Header/sunlogo.png")}
             style={[
               styles.sunCenter,
               isTablet && styles.sunCenterTablet,
             ]}
-          />
+          /> */}
            {/* Registration Number Below Sun Logo */}
           <Text
             style={[
@@ -139,7 +138,7 @@ export default function Header({ toggleSidebar }) {
               isTablet && styles.regNoTablet1,
             ]}
           >
-            காவி
+            PARTNER
           </Text>
 
           <View
@@ -294,7 +293,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     right: 1,
-    bottom: -34,
+    bottom: -32,
     height: 159,
   },
 
@@ -323,17 +322,18 @@ const styles = StyleSheet.create({
     bottom:55,
   },
 
-    regNo1: {
+  regNo1: {
     position: "absolute",
-    bottom: 12, // Position below the sun logo
+    bottom: 12,
     fontSize: 12,
+    fontFamily: "Impact", // Added Impact font
     fontWeight: "bold",
     color: "#ffffff",
-    // backgroundColor: "rgba(255,255,255,0.8)",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     overflow: "hidden",
+     // Added for better appearance
   },
   
   regNoTablet1: {
@@ -342,6 +342,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
+    letterSpacing: 2, // Added for better appearance on tablet
   },
 
   /* WHITE LINE */
@@ -359,18 +360,3 @@ const styles = StyleSheet.create({
     bottom: -2,
   },
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

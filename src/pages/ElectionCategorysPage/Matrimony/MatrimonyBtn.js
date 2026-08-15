@@ -377,7 +377,7 @@ const MatrimonyBtn = () => {
             </View>
 
             <View style={styles.brandBlock}>
-              <Text style={styles.brandTitle}>Kaavi Matrimony</Text>
+              <Text style={styles.brandTitle}>Partner Matrimony</Text>
               <Text style={styles.brandSubtitle}>Find a life partner rooted in tradition</Text>
             </View>
 

@@ -17,22 +17,26 @@ const { width } = Dimensions.get("window");
 
 const RootPage = () => {
   const navigation = useNavigation();
-  const rotateAnim = useRef(new Animated.Value(0)).current;
+  
+  // Animation value for rotation - COMMENTED OUT
+  // const rotateAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 8000,
-        useNativeDriver: true,
-      })
-    ).start();
-  }, []);
+  // useEffect(() => {
+  //   // Continuous rotation animation
+  //   Animated.loop(
+  //     Animated.timing(rotateAnim, {
+  //       toValue: 1,
+  //       duration: 8000, // 8 seconds for one full rotation
+  //       useNativeDriver: true,
+  //     })
+  //   ).start();
+  // }, []);
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+  // // Interpolate rotation value to degrees - COMMENTED OUT
+  // const spin = rotateAnim.interpolate({
+  //   inputRange: [0, 1],
+  //   outputRange: ["0deg", "360deg"],
+  // });
 
   const logoSize = width > 600 ? 220 : 160; // Tablet responsive
 
@@ -42,32 +46,23 @@ const RootPage = () => {
       style={{ flex: 1 }}
     >
       <SafeAreaView style={styles.container}>
-        {/* Logo Section */}
+        {/* Logo Section - Rotation Removed */}
         <View style={styles.sunWrapper}>
-          <Animated.Image
-            source={require("../../../assets/Header/sunoutline.png")}
+          <Image
+            source={require("../../../assets/Header/partner logo.png")}
             style={[
               {
                 width: logoSize,
                 height: logoSize,
-                transform: [{ rotate: spin }],
+                // transform: [{ rotate: spin }], // Rotation removed
               },
             ]}
-            resizeMode="contain"
-          />
-          <Image
-            source={require("../../../assets/Header/sunlogo.png")}
-            style={{
-              position: "absolute",
-              width: logoSize - 30,
-              height: logoSize - 30,
-            }}
             resizeMode="contain"
           />
         </View>
 
         {/* Title */}
-        <Text style={styles.title}>Welcome to Kaavi</Text>
+        <Text style={styles.title}>Welcome to Partner</Text>
 
         {/* Buttons */}
         <TouchableOpacity
@@ -148,4 +143,3 @@ const styles = StyleSheet.create({
     color: "#000",
   },
 });
-

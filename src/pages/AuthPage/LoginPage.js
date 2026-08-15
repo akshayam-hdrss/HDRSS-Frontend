@@ -25,22 +25,22 @@ export default function Loginpage() {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
 
-  // ✅ Rotation Animation (same as Header)
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 8000,
-        useNativeDriver: true,
-      })
-    ).start();
-  }, []);
+  // ✅ Rotation Animation - COMMENTED OUT
+  // const rotateAnim = useRef(new Animated.Value(0)).current;
+  // useEffect(() => {
+  //   Animated.loop(
+  //     Animated.timing(rotateAnim, {
+  //       toValue: 1,
+  //       duration: 8000,
+  //       useNativeDriver: true,
+  //     })
+  //   ).start();
+  // }, []);
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+  // const spin = rotateAnim.interpolate({
+  //   inputRange: [0, 1],
+  //   outputRange: ["0deg", "360deg"],
+  // });
 
   const onLoginPress = async () => {
     if (!phoneNumber || !password) {
@@ -79,16 +79,17 @@ export default function Loginpage() {
 
   return (
     <View style={styles.container}>
-      {/* 🌞 Rotating Sun Logo */}
+      {/* 🌞 Rotating Sun Logo - Rotation Removed */}
       <View style={styles.sunWrapper}>
-        <Animated.Image
-          source={require("../../../assets/Header/sunoutline.png")}
-          style={[styles.sunRays, { transform: [{ rotate: spin }] }]}
-        />
         <Image
+          source={require("../../../assets/Header/partner logo.png")}
+          style={[styles.sunRays]}
+          // style={[styles.sunRays, { transform: [{ rotate: spin }] }]} // Rotation removed
+        />
+        {/* <Image
           source={require("../../../assets/Header/sunlogo.png")}
           style={styles.sunCenter}
-        />
+        /> */}
       </View>
 
       {/* LOGIN Title */}
@@ -155,7 +156,7 @@ export default function Loginpage() {
 
       {/* Signup Link */}
       <View style={styles.bottomCard}>
-        <Text style={styles.bottomText}>Don’t have an Account </Text>
+        <Text style={styles.bottomText}>Don't have an Account </Text>
         <TouchableOpacity
           style={styles.signInButton}
           onPress={() => navigation.navigate("Signup")}
@@ -196,8 +197,8 @@ const styles = StyleSheet.create({
     marginVertical: -25,
   },
   sunRays: {
-    width: 150,
-    height: 150,
+    width: 145,
+    height: 145,
     resizeMode: "contain",
     marginVertical: -20,
   },
