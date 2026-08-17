@@ -246,7 +246,7 @@ export default function SignupPage({ navigation }) {
           {/* 🌞 Rotating Sun Logo - Rotation Removed */}
           <View style={styles.sunWrapper}>
             <Image
-              source={require("../../../assets/Header/partner logo.png")}
+              source={require("../../../assets/Header/partner.png")}
               style={[styles.sunRays]}
               // style={[styles.sunRays, { transform: [{ rotate: spin }] }]} // Rotation removed
             />

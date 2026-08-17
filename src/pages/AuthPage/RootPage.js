@@ -13,7 +13,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 const RootPage = () => {
   const navigation = useNavigation();
@@ -38,7 +38,8 @@ const RootPage = () => {
   //   outputRange: ["0deg", "360deg"],
   // });
 
-  const logoSize = width > 600 ? 220 : 160; // Tablet responsive
+  const logoSize = width > 600 ? 220 : 160;
+  const logoSize1 = height > 600 ? 220 : 160; // Tablet responsive
 
   return (
     <LinearGradient
@@ -49,11 +50,11 @@ const RootPage = () => {
         {/* Logo Section - Rotation Removed */}
         <View style={styles.sunWrapper}>
           <Image
-            source={require("../../../assets/Header/partner logo.png")}
+            source={require("../../../assets/Header/partner.png")}
             style={[
               {
                 width: logoSize,
-                height: logoSize,
+                height: logoSize1,
                 // transform: [{ rotate: spin }], // Rotation removed
               },
             ]}
@@ -65,21 +66,23 @@ const RootPage = () => {
         <Text style={styles.title}>Welcome to Partner</Text>
 
         {/* Buttons */}
-        <TouchableOpacity
-          style={styles.loginButton}
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate("Login")}
-        >
-          <Text style={styles.buttonText}>Sign In</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.loginButton}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate("Login")}
+          >
+            <Text style={styles.buttonText}>Sign In</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.signupButton}
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate("Signup")}
-        >
-          <Text style={styles.buttonText}>Sign Up</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.signupButton}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate("Signup")}
+          >
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -90,26 +93,33 @@ export default RootPage;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start", // Changed from "center" to "flex-start"
     alignItems: "center",
     paddingHorizontal: 30,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40, // Add top padding for status bar
   },
 
   sunWrapper: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 40,
+    marginTop: height * 0.05, // Add some margin from top (5% of screen height)
+    marginBottom: 20, // Reduced from 40
   },
 
   title: {
     fontSize: 30,
     fontFamily: "Impact",
     fontWeight: "800",
-    marginBottom: 50,
+    marginBottom: 40, // Reduced from 50
     color: "#fff",
     letterSpacing: 1,
   },
   
+  buttonContainer: {
+    width: "100%",
+    marginTop: 10, // Add some space above buttons
+  },
+
   loginButton: {
     width: "100%",
     padding: 18,
