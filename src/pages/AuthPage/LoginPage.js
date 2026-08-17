@@ -59,7 +59,7 @@ export default function Loginpage() {
 
         setAlertType("success");
         setAlertTitle("Login Successful 🎉");
-        setAlertMessage("Welcome to HDRSS!");
+        setAlertMessage("Welcome to PARTNER!");
         setAlertVisible(true);
         // Navigation will happen after alert closes (see onConfirm below)
       } else {
@@ -82,7 +82,7 @@ export default function Loginpage() {
       {/* 🌞 Rotating Sun Logo - Rotation Removed */}
       <View style={styles.sunWrapper}>
         <Image
-          source={require("../../../assets/Header/partner.png")}
+          source={require("../../../assets/Header/partner type.png")}
           style={[styles.sunRays]}
           // style={[styles.sunRays, { transform: [{ rotate: spin }] }]} // Rotation removed
         />
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     marginVertical: -25,
   },
   sunRays: {
-    width: 160,
+    width: 166,
     height: 175,
     resizeMode: "contain",
     marginVertical: -20,

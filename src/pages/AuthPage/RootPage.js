@@ -38,7 +38,7 @@ const RootPage = () => {
   //   outputRange: ["0deg", "360deg"],
   // });
 
-  const logoSize = width > 600 ? 220 : 160;
+  const logoSize = width > 600 ? 220 : 166;
   const logoSize1 = height > 600 ? 220 : 160; // Tablet responsive
 
   return (
@@ -50,7 +50,7 @@ const RootPage = () => {
         {/* Logo Section - Rotation Removed */}
         <View style={styles.sunWrapper}>
           <Image
-            source={require("../../../assets/Header/partner.png")}
+            source={require("../../../assets/Header/partner type.png")}
             style={[
               {
                 width: logoSize,

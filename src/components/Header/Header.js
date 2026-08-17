@@ -1,154 +1,65 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
-  Animated,
   useWindowDimensions,
 } from "react-native";
 import * as Font from "expo-font";
 
 export default function Header({ toggleSidebar }) {
-  // const rotateAnim = useRef(new Animated.Value(0)).current; // COMMENTED OUT
   const [fontLoaded, setFontLoaded] = useState(false);
   const { width } = useWindowDimensions();
 
   const isTablet = width >= 600;
 
-  // Load Impact font
+  // Load fonts
   useEffect(() => {
     (async () => {
       await Font.loadAsync({
         Impact: require("../../../assets/fonts/impact.ttf"),
+        TitanOne: require("../../../assets/fonts/TitanOne-Regular.ttf"),
       });
       setFontLoaded(true);
     })();
   }, []);
 
-  // Rotation animation - COMMENTED OUT
-  // useEffect(() => {
-  //   Animated.loop(
-  //     Animated.timing(rotateAnim, {
-  //       toValue: 1,
-  //       duration: 8000,
-  //       useNativeDriver: true,
-  //     })
-  //   ).start();
-  // }, []);
-
-  // const spin = rotateAnim.interpolate({
-  //   inputRange: [0, 1],
-  //   outputRange: ["0deg", "360deg"],
-  // });
-
   if (!fontLoaded) {
     return (
       <View style={styles.loader}>
-        <Text style={{ color: "white" }}>Loading Impact font...</Text>
+        <Text style={{ color: "white" }}>Loading fonts...</Text>
       </View>
     );
   }
 
+  
+
   return (
     <View style={[styles.header, isTablet && styles.headerTablet]}>
-      {/* Menu */}
-      <TouchableOpacity onPress={toggleSidebar}>
+      {/* Menu - left side */}
+      <TouchableOpacity onPress={toggleSidebar} style={styles.menuWrapper}>
         <Text style={[styles.menuIcon, isTablet && styles.menuIconTablet]}>
           ☰
         </Text>
       </TouchableOpacity>
 
-      {/* Titles */}
+      {/* Center - PARTNER title + small tagline */}
       <View style={styles.titleContainer}>
         <Text
-          style={[
-            styles.tamilText,
-            isTablet && styles.tamilTextTablet,
-          ]}
+          style={[styles.partnerTitle, isTablet && styles.partnerTitleTablet]}
         >
-        இந்து தர்ம ரக்ஷ சேனா
+          PARTNER
         </Text>
-
         <Text
-          style={[
-            styles.hinduText,
-            isTablet && styles.hinduTextTablet,
-          ]}
+          style={[styles.tagline, isTablet && styles.taglineTablet]}
         >
-          हिन्दू धर्म रक्षा सेना
-        </Text>
-
-        <Text
-          style={[
-            styles.englishText,
-            isTablet && styles.englishTextTablet,
-          ]}
-        >
-          HINDU DHARMA RAKSHA SENA
+          access to success...
         </Text>
       </View>
 
-      {/* Logo Section */}
-      <View
-        style={[
-          styles.orangeContainer,
-          isTablet && styles.orangeContainerTablet,
-        ]}
-      >
-        <View
-          style={[
-            styles.logoBox,
-            isTablet && styles.logoBoxTablet,
-          ]}
-        />
-
-        <View style={styles.sunWrapper}>
-          <Image
-            source={require("../../../assets/Header/partner logo.png")}
-            style={[
-              styles.sunRays,
-              isTablet && styles.sunRaysTablet,
-              // { transform: [{ rotate: spin }] }, // Rotation removed
-            ]}
-          />
-
-          <Text
-            style={[
-              styles.regNo,
-              isTablet && styles.regNoTablet,
-            ]}
-          >
-            {/* REGD.NO: 152/2021 */}
-               REGD.NO: 152/2021
-          </Text>
-
-          {/* <Image
-            source={require("../../../assets/Header/sunlogo.png")}
-            style={[
-              styles.sunCenter,
-              isTablet && styles.sunCenterTablet,
-            ]}
-          /> */}
-           {/* Registration Number Below Sun Logo */}
-          <Text
-            style={[
-              styles.regNo1,
-              isTablet && styles.regNoTablet1,
-            ]}
-          >
-            PARTNER
-          </Text>
-
-          <View
-            style={[
-              styles.whiteLine,
-              isTablet && styles.whiteLineTablet,
-            ]}
-          />
-        </View>
-      </View>
+      {/* Right side spacer - keeps title centered */}
+      <View style={styles.menuWrapper} />
     </View>
   );
 }
@@ -166,197 +77,69 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#800000",
-    paddingVertical: 30,
-    paddingHorizontal: 10,
+    paddingVertical: 25,
+    paddingHorizontal: 16,
     borderBottomLeftRadius: 50,
     borderBottomRightRadius: 45,
   },
 
   headerTablet: {
-    paddingVertical: 35,
+    paddingVertical: 28,
     borderBottomLeftRadius: 75,
-   
   },
 
   /* MENU */
+  menuWrapper: {
+    width: 32,
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
+
   menuIcon: {
-    fontSize: 20,
+    fontSize: 27,
     color: "white",
-    left: 9,
-    top: -30,
+    marginTop: 20,
+    marginLeft: 9, // Changed from 4 to 0
   },
 
   menuIconTablet: {
     fontSize: 34,
-    top: -55,
   },
 
-  /* TITLES */
+  /* TITLE (CENTER) */
   titleContainer: {
     flex: 1,
     alignItems: "center",
-  },
-
-  tamilText: {
-  color: "white",
-  fontSize: 16,
-  fontWeight: "800",
-  fontFamily: "Impact",
-  letterSpacing: -1,
-  textAlign: "center",
-   marginTop: 40,
-   left:9,
-  },
-
-  tamilTextTablet: {
-    fontSize: 25,
-    marginTop: 20,
-  },
-
-  hinduText: {
-   color: "white",
-  fontSize: 16,
-  fontWeight: "900",
-  fontFamily: "Impact",
-  letterSpacing: 5,
-  textAlign: "center",
-  marginTop: 4,
-   left:9,
-  },
-
-  hinduTextTablet: {
-    fontSize: 25,
-    letterSpacing: 6,
-  },
-
-  englishText: {
-  color: "white",
-  fontSize: 16,
-  fontWeight: "1200",
-  fontFamily: "Impact",
-  letterSpacing: -0,
-  textAlign: "center",
-  marginTop: 2,
-  left:9,
-  },
-
-  englishTextTablet: {
-    fontSize: 27,
-  },
-
-  /* ORANGE CONTAINER */
-  orangeContainer: {
-    width: 120,
-    height: 120,
-    alignItems: "center",
     justifyContent: "center",
+    marginLeft: -5, // Added to pull title slightly left (closer to menu)
   },
 
-  orangeContainerTablet: {
-    width: 170,
-    height: 170,
+  partnerTitle: {
+    color: "white",
+    fontSize: 33,
+    fontFamily: "Impact",
+    letterSpacing: 1,
+    textAlign: "center",
+    marginTop: 25,
   },
 
-  /* LOGO BOX */
-  logoBox: {
-    width: 100,
-    height: 200,
-    backgroundColor: "#E65100",
-    right: -15,
-    marginRight: 6,
-    paddingLeft: 5,
+  partnerTitleTablet: {
+    fontSize: 42,
   },
 
-  logoBoxTablet: {
-    width: 140,
-    height: 260,
-    right: -20,
-  },
-
-  /* REG NUMBER */
-  regNo: {
-    position: "absolute",
-    top: 10,
-    right:9,
-    fontSize:9,
-    fontWeight: "bold",
+  /* Tagline sits under the second half of PARTNER (roughly E-R), not full width */
+  tagline: {
     color: "#000",
-  },
-  regNoTablet: {
-    fontSize:12,
-    top: -40,
-    right: 15,
-  },
-  /* SUN */
-  sunWrapper: {
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "center",
-    right: 1,
-    bottom: -32,
-    height: 159,
+    fontSize: 5,
+    fontStyle: "italic",
+    marginTop: -7,
+    alignSelf: "center",
+    marginLeft: 100, // Reduced from 60
   },
 
-  sunRays: {
-    width: 100,
-    height: 150,
-    resizeMode: "contain",
-  },
-
-  sunRaysTablet: {
-    width: 140,
-    height: 200,
-    bottom:24,
-  },
-
-  sunCenter: {
-    position: "absolute",
-    width: 200,
-    height: 67,
-    resizeMode: "contain",
-  },
-
-  sunCenterTablet: {
-    width: 260,
-    height: 98,
-    bottom:55,
-  },
-
-  regNo1: {
-    position: "absolute",
-    bottom: 12,
-    fontSize: 12,
-    fontFamily: "Impact", // Added Impact font
-    fontWeight: "bold",
-    color: "#ffffff",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    overflow: "hidden",
-     // Added for better appearance
-  },
-  
-  regNoTablet1: {
-    bottom: 13,
-    fontSize: 16,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    letterSpacing: 2, // Added for better appearance on tablet
-  },
-
-  /* WHITE LINE */
-  whiteLine: {
-    width: "100%",
-    height: 2,
-    backgroundColor: "#fff",
-    position: "absolute",
-    bottom: -1,
-    right: -3,
-  },
-
-  whiteLineTablet: {
-    height: 3,
-    bottom: -2,
+  taglineTablet: {
+    fontSize: 13,
+    marginTop: 4,
+    marginLeft: 70, // Reduced from 90
   },
 });

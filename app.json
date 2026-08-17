@@ -1,19 +1,25 @@
 {
   "expo": {
-    "name": "KAAVI",
+    "name": "PARTNER",
     "slug": "hdrssfrontent",
     "version": "1.2.6",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/Header/partnerapp logo.jpeg",
     "scheme": "hdrss",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+
     "ios": {
       "supportsTablet": true,
       "buildNumber": "3"
     },
+
     "android": {
-      "icon": "./assets/images/icon.png",
+      "icon": "./assets/Header/partnerapp logo.jpeg",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/Header/partner logo.png",
+        "backgroundColor": "#A32311"
+      },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
@@ -30,19 +36,21 @@
         "android.permission.WRITE_CALENDAR"
       ]
     },
+
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/Header/partnerapp logo.jpeg"
     },
+
     "plugins": [
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/Header/partnerapp logo.jpeg",
           "imageWidth": 200,
           "resizeMode": "cover",
-          "backgroundColor": "#F47C20",
+          "backgroundColor": "#A32311",
           "dark": {
-            "backgroundColor": "#F47C20"
+            "backgroundColor": "#A32311"
           }
         }
       ],
@@ -55,10 +63,12 @@
       "expo-asset",
       "expo-video"
     ],
+
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
+
     "extra": {
       "eas": {
         "projectId": "5e8a1431-48c4-4a8d-b3fe-b34cd2788887"

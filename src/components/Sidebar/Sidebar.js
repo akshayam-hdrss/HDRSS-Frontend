@@ -20,8 +20,8 @@ export default function Sidebar({ closeSidebar }) {
   const isTablet = screenWidth >= 600;
 
   const sidebarWidth = isTablet
-    ? Math.min(380, screenWidth * 0.45)
-    : Math.min(300, screenWidth * 0.82);
+    ? Math.min(300, screenWidth * 0.55)
+    : Math.min(220, screenWidth * 0.90);
 
   const items = [
     { label: "Home",              icon: "home",             screen: "HomePage"    },
@@ -49,13 +49,16 @@ export default function Sidebar({ closeSidebar }) {
     if (closeSidebar) closeSidebar();
   };
 
+  const handleClose = () => {
+    console.log('Close button pressed');
+    if (closeSidebar) {
+      closeSidebar();
+    }
+  };
+
   return (
-    // 🔹 On tablet the sidebar sits on the RIGHT: we just reverse the row
-    // direction so the dim background renders first (left side) and the
-    // sidebar panel renders last (right side). Mobile keeps the original
-    // left-side layout untouched.
-    <View style={[styles.overlay, isTablet && styles.overlayTablet]}>
-      {/* SIDEBAR */}
+    <View style={styles.overlay}>
+      {/* SIDEBAR - Always on the LEFT */}
       <View
         style={[
           styles.sidebar,
@@ -85,7 +88,7 @@ export default function Sidebar({ closeSidebar }) {
             </View>
           </View>
           <TouchableOpacity
-            onPress={closeSidebar}
+            onPress={handleClose}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={[styles.closeBtn, isTablet && styles.closeBtnTablet]}
           >
@@ -93,7 +96,7 @@ export default function Sidebar({ closeSidebar }) {
           </TouchableOpacity>
         </View>
 
-        {/* ── Menu Items — now scrollable so every item is reachable ── */}
+        {/* ── Menu Items ── */}
         <ScrollView
           style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
@@ -143,8 +146,8 @@ export default function Sidebar({ closeSidebar }) {
         </View>
       </View>
 
-      {/* DIM BACKGROUND */}
-      <TouchableWithoutFeedback onPress={closeSidebar}>
+      {/* DIM BACKGROUND - Click to close (on the RIGHT side of sidebar) */}
+      <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.background} />
       </TouchableWithoutFeedback>
     </View>
@@ -153,22 +156,22 @@ export default function Sidebar({ closeSidebar }) {
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
-    flexDirection: "row",
-  },
-  overlayTablet: {
-    // 🔹 reversing the row puts the sidebar (first JSX child) on the right
-    // and the dim background (second JSX child) on the left
-    flexDirection: "row-reverse",
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row', // This puts sidebar on left, background on right
+    zIndex: 999,
+    backgroundColor: 'transparent',
   },
   background: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    flex: 1, // Takes the remaining space after sidebar
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
 
   /* Sidebar shell */
   sidebar: {
-    flex: 1,
     backgroundColor: "#FAFAFA",
     elevation: 16,
     shadowColor: "#000",
@@ -176,14 +179,11 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   sidebarMobile: {
-    // shadow falls to the right, toward the dimmed content behind it
     shadowOffset: { width: 3, height: 0 },
   },
   sidebarTablet: {
-    // 🔹 panel is now on the right, so the shadow must fall to the LEFT
-    // (toward the dimmed content), not off the right edge of the screen
     elevation: 20,
-    shadowOffset: { width: -5, height: 0 },
+    shadowOffset: { width: 5, height: 0 }, // Shadow on the right side
     shadowOpacity: 0.22,
     shadowRadius: 18,
   },
@@ -303,6 +303,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#2D2D2D",
     fontWeight: "500",
+    flex: 1,
   },
   labelTablet: {
     fontSize: 18,
