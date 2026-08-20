@@ -38,7 +38,7 @@ const RootPage = () => {
   //   outputRange: ["0deg", "360deg"],
   // });
 
-  const logoSize = width > 600 ? 220 : 166;
+  const logoSize = width > 600 ? 220 : 300;
   const logoSize1 = height > 600 ? 220 : 160; // Tablet responsive
 
   return (
@@ -63,7 +63,7 @@ const RootPage = () => {
         </View>
 
         {/* Title */}
-        <Text style={styles.title}>Welcome to Partner</Text>
+        {/* <Text style={styles.title}>Welcome to</Text> */}
 
         {/* Buttons */}
         <View style={styles.buttonContainer}>

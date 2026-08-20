@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     marginTop:7,
   },
   sunRays: {
-    width: 166,
+    width: 300,
     height: 140,
     resizeMode: "contain",
   },

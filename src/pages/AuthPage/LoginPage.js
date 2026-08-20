@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     marginVertical: -25,
   },
   sunRays: {
-    width: 166,
+    width: 300,
     height: 175,
     resizeMode: "contain",
     marginVertical: -20,

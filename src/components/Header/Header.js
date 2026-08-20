@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   useWindowDimensions,
+  Image,
 } from "react-native";
 import * as Font from "expo-font";
 
@@ -33,12 +34,26 @@ export default function Header({ toggleSidebar }) {
     );
   }
 
-  
+  // Debug: Check if toggleSidebar is a function
+  console.log('toggleSidebar type:', typeof toggleSidebar);
+
+  const handleMenuPress = () => {
+    console.log('Menu pressed');
+    if (toggleSidebar) {
+      toggleSidebar();
+    } else {
+      console.warn('toggleSidebar prop is not provided or not a function');
+    }
+  };
 
   return (
     <View style={[styles.header, isTablet && styles.headerTablet]}>
       {/* Menu - left side */}
-      <TouchableOpacity onPress={toggleSidebar} style={styles.menuWrapper}>
+      <TouchableOpacity 
+        onPress={handleMenuPress} 
+        style={styles.menuWrapper}
+        activeOpacity={0.7}
+      >
         <Text style={[styles.menuIcon, isTablet && styles.menuIconTablet]}>
           ☰
         </Text>
@@ -46,16 +61,11 @@ export default function Header({ toggleSidebar }) {
 
       {/* Center - PARTNER title + small tagline */}
       <View style={styles.titleContainer}>
-        <Text
-          style={[styles.partnerTitle, isTablet && styles.partnerTitleTablet]}
-        >
-          PARTNER
-        </Text>
-        <Text
-          style={[styles.tagline, isTablet && styles.taglineTablet]}
-        >
-          access to success...
-        </Text>
+        <Image
+          source={require("../../../assets/Header/partner type.png")}
+          style={[styles.partnerImage, isTablet && styles.partnerImageTablet]}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Right side spacer - keeps title centered */}
@@ -90,20 +100,21 @@ const styles = StyleSheet.create({
 
   /* MENU */
   menuWrapper: {
-    width: 32,
+    width: 50, // Increased width for better touch area
     alignItems: "flex-start",
     justifyContent: "center",
+    padding: 5, // Added padding for better touch
   },
 
   menuIcon: {
-    fontSize: 27,
+    fontSize: 35,
     color: "white",
-    marginTop: 20,
-    marginLeft: 9, // Changed from 4 to 0
+    marginTop: 15,
+    marginLeft: 5,
   },
 
   menuIconTablet: {
-    fontSize: 34,
+    fontSize: 40,
   },
 
   /* TITLE (CENTER) */
@@ -111,35 +122,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: -5, // Added to pull title slightly left (closer to menu)
+    marginLeft: -5,
   },
 
-  partnerTitle: {
-    color: "white",
-    fontSize: 33,
-    fontFamily: "Impact",
-    letterSpacing: 1,
-    textAlign: "center",
+  /* Partner Image */
+  partnerImage: {
+    width: 200, // Adjusted for better display
+    height: 65,
     marginTop: 25,
+     marginLeft: 25,
   },
 
-  partnerTitleTablet: {
-    fontSize: 42,
-  },
-
-  /* Tagline sits under the second half of PARTNER (roughly E-R), not full width */
-  tagline: {
-    color: "#000",
-    fontSize: 5,
-    fontStyle: "italic",
-    marginTop: -7,
-    alignSelf: "center",
-    marginLeft: 100, // Reduced from 60
-  },
-
-  taglineTablet: {
-    fontSize: 13,
-    marginTop: 4,
-    marginLeft: 70, // Reduced from 90
+  partnerImageTablet: {
+    width: 280,
+    height: 60,
   },
 });
