@@ -17,7 +17,7 @@
     "android": {
       "icon": "./assets/Header/partnerapp logo.jpeg",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/Header/partner-foreground.jpeg",
+        "foregroundImage": "./assets/Header/partner-foreground.png",
         "backgroundColor": "#A32311"
       },
       "edgeToEdgeEnabled": true,
