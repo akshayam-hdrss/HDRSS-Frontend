@@ -2,7 +2,7 @@
   "expo": {
     "name": "PARTNER",
     "slug": "hdrssfrontent",
-    "version": "1.2.8",
+    "version": "1.2.7",
     "orientation": "portrait",
     "icon": "./assets/Header/partnerapp logo.jpeg",
     "scheme": "hdrss",
@@ -24,7 +24,7 @@
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
       "package": "com.aktechnologies.hdrss",
-      "versionCode": 15,
+      "versionCode": 14,
       "networkSecurityConfig": "./network_security_config.xml",
       "permissions": [
         "INTERNET",
