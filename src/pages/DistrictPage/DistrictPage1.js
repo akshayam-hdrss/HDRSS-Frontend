@@ -193,6 +193,7 @@ const styles = StyleSheet.create({
     color: "#93210A",
     marginBottom: 10,
     marginLeft: 10,
+    marginVertical:-115,
   },
 
   headingTablet: {

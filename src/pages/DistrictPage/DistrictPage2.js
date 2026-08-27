@@ -20,6 +20,7 @@ import YoutubePlayer from "react-native-youtube-iframe";
 import TownPage1 from "./TownPage/TownPage1";
 import { Linking } from "react-native";
 import Loader from "../../components/Alert/Loader";
+import InterviewVideos from "../../components/Add/InterviewVideos";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const isTablet = screenWidth >= 600;
@@ -49,7 +50,7 @@ export default function DistrictPage2() {
 
   const adListRef = useRef(null);
   const adIndex = useRef(0);
-  
+
   // Animation ref for business button slide-in
   const slideAnim = useRef(new Animated.Value(-screenWidth)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -162,9 +163,7 @@ export default function DistrictPage2() {
 
   if (loading) {
     return (
-      // <View style={styles.center}>
-        <Loader visible={true} progress={50} message="Loading district details..." />
-      // </View>
+      <Loader visible={true} progress={50} message="Loading district details..." />
     );
   }
 
@@ -181,7 +180,7 @@ export default function DistrictPage2() {
   };
 
   const handlepartiesPress = (districtId, districtName) => {
-    navigation.navigate("Partiespage1", { districtId,districtName: districtName });
+    navigation.navigate("Partiespage1", { districtId, districtName: districtName });
   };
 
   const tourismPlaces =
@@ -371,39 +370,33 @@ export default function DistrictPage2() {
             >
               {/* Glowing effect behind icon */}
               <View style={styles.glowEffect} />
-              
+
               {/* Icon with count badge */}
               <View style={styles.businessIconContainer}>
                 <View style={styles.iconCircle}>
-                  <Ionicons 
-                    name="storefront" 
-                    size={isTablet ? 30 : 24} 
-                    color="#fff" 
+                  <Ionicons
+                    name="storefront"
+                    size={isTablet ? 30 : 24}
+                    color="#fff"
                   />
                 </View>
                 <View style={styles.countBadge}>
                   <Text style={styles.countText}>100+</Text>
                 </View>
               </View>
-              
+
               {/* Text content */}
               <View style={styles.businessTextContainer}>
                 <Text style={[styles.businessMainText, isTablet && styles.businessMainTextTablet]}>
                   Business Bazaar
                 </Text>
                 <View style={styles.businessSubContainer}>
-                  <View style={styles.featureTag}>
-                    {/* <Ionicons name="checkmark-circle" size={12} color="#4CAF50" /> */}
-                    {/* <Text style={styles.featureText}>Verified</Text> */}
-                  </View>
-                  {/* <Text style={[styles.businessSubText, isTablet && styles.businessSubTextTablet]}>
-                    Local Commerce Hub
-                  </Text> */}
+                  <View style={styles.featureTag} />
                 </View>
               </View>
-              
+
               {/* Arrow with bounce effect */}
-              <Animated.View 
+              <Animated.View
                 style={[
                   styles.businessArrowContainer,
                   {
@@ -418,14 +411,14 @@ export default function DistrictPage2() {
                   },
                 ]}
               >
-                <Ionicons 
-                  name="arrow-forward-circle" 
-                  size={isTablet ? 32 : 26} 
-                  color="#FFD700" 
+                <Ionicons
+                  name="arrow-forward-circle"
+                  size={isTablet ? 32 : 26}
+                  color="#FFD700"
                 />
                 <Text style={styles.exploreText}>Explore</Text>
               </Animated.View>
-              
+
               {/* Decorative elements */}
               <View style={styles.decorativeDot1} />
               <View style={styles.decorativeDot2} />
@@ -445,7 +438,7 @@ export default function DistrictPage2() {
 
             <TouchableOpacity
               style={[styles.partyButton, isTablet && styles.partyButtonTablet]}
-              onPress={() => handlepartiesPress(districtId,district.name)}
+              onPress={() => handlepartiesPress(districtId, district.name)}
             >
               <Text style={[styles.twoButtonText, isTablet && styles.twoButtonTextTablet]}>
                 Parties
@@ -453,38 +446,41 @@ export default function DistrictPage2() {
             </TouchableOpacity>
           </View>
 
+          {/* 🎥 Interview Videos — placed right after Government / Parties */}
+          <InterviewVideos districtId={districtId} />
+
           {/* 🏘️ Town Section */}
           <View>
             <TownPage1 districtName={district.name} />
           </View>
 
-        {/* 📋 TWO Buttons Row - Complaint, Visiting Places */}
-<View style={[styles.twoButtonsContainer, isTablet && styles.twoButtonsContainerTablet]}>
-  <TouchableOpacity
-    style={[styles.actionButton, isTablet && styles.actionButtonTablet]}
-    onPress={() =>
-      navigation.navigate("ComplainPage1", {
-        districtId: district.id,
-        districtName: district.name,
-      })
-    }
-  >
-    <Text style={[styles.buttonText, isTablet && styles.buttonTextTablet]}>
-      Complaint
-    </Text>
-  </TouchableOpacity>
+          {/* 📋 TWO Buttons Row - Complaint, Visiting Places */}
+          <View style={[styles.twoButtonsContainer, isTablet && styles.twoButtonsContainerTablet]}>
+            <TouchableOpacity
+              style={[styles.actionButton, isTablet && styles.actionButtonTablet]}
+              onPress={() =>
+                navigation.navigate("ComplainPage1", {
+                  districtId: district.id,
+                  districtName: district.name,
+                })
+              }
+            >
+              <Text style={[styles.buttonText, isTablet && styles.buttonTextTablet]}>
+                Complaint
+              </Text>
+            </TouchableOpacity>
 
-  <TouchableOpacity
-    style={[styles.actionButton, isTablet && styles.actionButtonTablet]}
-    onPress={() => navigation.navigate("Galleryfull",{
-      districtId: district.id,
-    })}
-  >
-    <Text style={[styles.buttonText, isTablet && styles.buttonTextTablet]}>
-      Visiting Places
-    </Text>
-  </TouchableOpacity>
-</View>
+            <TouchableOpacity
+              style={[styles.actionButton, isTablet && styles.actionButtonTablet]}
+              onPress={() => navigation.navigate("Galleryfull", {
+                districtId: district.id,
+              })}
+            >
+              <Text style={[styles.buttonText, isTablet && styles.buttonTextTablet]}>
+                Visiting Places
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {/* 🏞 Tourism */}
           {tourismPlaces.length > 0 && (
@@ -493,7 +489,7 @@ export default function DistrictPage2() {
                 Tourism
               </Text>
               <FlatList
-                data={tourismPlaces.slice(0, 2)} // Always show only 2 initially
+                data={tourismPlaces.slice(0, 2)}
                 nestedScrollEnabled
                 keyExtractor={(item, i) => i.toString()}
                 renderItem={({ item, index }) => {
@@ -534,14 +530,14 @@ export default function DistrictPage2() {
                           <TouchableOpacity
                             onPress={() => Linking.openURL(`tel:${item.phone}`)}
                           >
-                            <Ionicons 
-                              name="call" 
-                              size={isTablet ? 24 : 20} 
-                              color="#0aa04dff" 
+                            <Ionicons
+                              name="call"
+                              size={isTablet ? 24 : 20}
+                              color="#0aa04dff"
                             />
                           </TouchableOpacity>
 
-                          <TouchableOpacity    
+                          <TouchableOpacity
                             onPress={() =>
                               Linking.openURL(
                                 `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -564,7 +560,6 @@ export default function DistrictPage2() {
                 }}
               />
 
-              {/* Show See More only if there are more than 2 items */}
               {tourismPlaces.length > 2 && (
                 <TouchableOpacity
                   style={[styles.toggleButton, isTablet && styles.toggleButtonTablet]}
@@ -578,10 +573,10 @@ export default function DistrictPage2() {
                   <Text style={[styles.toggleButtonText, isTablet && styles.toggleButtonTextTablet]}>
                     See More
                   </Text>
-                  <Ionicons 
-                    name="chevron-forward" 
-                    size={isTablet ? 20 : 16} 
-                    color="#93210A" 
+                  <Ionicons
+                    name="chevron-forward"
+                    size={isTablet ? 20 : 16}
+                    color="#93210A"
                   />
                 </TouchableOpacity>
               )}
@@ -595,7 +590,7 @@ export default function DistrictPage2() {
                 Temples
               </Text>
               <FlatList
-                data={templePlaces.slice(0, 2)} // Always show only 2 initially
+                data={templePlaces.slice(0, 2)}
                 nestedScrollEnabled
                 keyExtractor={(item, i) => i.toString()}
                 renderItem={({ item, index }) => {
@@ -636,10 +631,10 @@ export default function DistrictPage2() {
                           <TouchableOpacity
                             onPress={() => Linking.openURL(`tel:${item.phone}`)}
                           >
-                            <Ionicons 
-                              name="call" 
-                              size={isTablet ? 24 : 20} 
-                              color="#0aa04dff" 
+                            <Ionicons
+                              name="call"
+                              size={isTablet ? 24 : 20}
+                              color="#0aa04dff"
                             />
                           </TouchableOpacity>
 
@@ -666,7 +661,6 @@ export default function DistrictPage2() {
                 }}
               />
 
-              {/* Show See More only if there are more than 2 items */}
               {templePlaces.length > 2 && (
                 <TouchableOpacity
                   style={[styles.toggleButton, isTablet && styles.toggleButtonTablet]}
@@ -680,10 +674,10 @@ export default function DistrictPage2() {
                   <Text style={[styles.toggleButtonText, isTablet && styles.toggleButtonTextTablet]}>
                     See More
                   </Text>
-                  <Ionicons 
-                    name="chevron-forward" 
-                    size={isTablet ? 20 : 16} 
-                    color="#93210A" 
+                  <Ionicons
+                    name="chevron-forward"
+                    size={isTablet ? 20 : 16}
+                    color="#93210A"
                   />
                 </TouchableOpacity>
               )}
@@ -713,7 +707,7 @@ export default function DistrictPage2() {
           </View>
         </ScrollView>
       )}
-    />   
+    />
   );
 }
 
@@ -749,8 +743,6 @@ const styles = StyleSheet.create({
     left: 90,
     bottom: 20,
   },
-  
-  // Translate Button Styles
   translateButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -783,8 +775,6 @@ const styles = StyleSheet.create({
   translateTextTablet: {
     fontSize: 16,
   },
-  
-  // Description Styles
   descriptionContainer: {
     margin: 15,
   },
@@ -801,7 +791,6 @@ const styles = StyleSheet.create({
     lineHeight: 29,
     fontSize: 16,
   },
-  
   seeMoreContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -821,8 +810,6 @@ const styles = StyleSheet.create({
   seeMoreTextTablet: {
     fontSize: 18,
   },
-  
-  // Advertisement Styles
   section: {
     marginVertical: 10,
     alignItems: "center",
@@ -841,17 +828,13 @@ const styles = StyleSheet.create({
   adImageTablet: {
     height: 250,
   },
-  
-  // 🏪 ANIMATED Business Button Container
   businessButtonContainer: {
     marginHorizontal: 15,
     marginTop: 15,
     marginBottom: 10,
   },
-  
-  // 🏪 Business Button - Premium Design
   businessButton: {
-    backgroundColor: "#8B0000", // Changed to match your theme (dark red)
+    backgroundColor: "#8B0000",
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 20,
@@ -872,8 +855,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 20,
   },
-  
-  // Glow effect
   glowEffect: {
     position: "absolute",
     top: -50,
@@ -882,15 +863,11 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     backgroundColor: "rgba(255, 215, 0, 0.15)",
-    blurRadius: 20,
   },
-  
-  // Icon container with count badge
   businessIconContainer: {
     position: "relative",
     marginRight: 15,
   },
-  
   iconCircle: {
     width: 55,
     height: 55,
@@ -901,7 +878,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "rgba(255, 215, 0, 0.3)",
   },
-  
   countBadge: {
     position: "absolute",
     top: -8,
@@ -920,18 +896,14 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 4,
   },
-  
   countText: {
     color: "#8B0000",
     fontSize: 10,
     fontWeight: "bold",
   },
-  
-  // Text container
   businessTextContainer: {
     flex: 1,
   },
-  
   businessMainText: {
     color: "#fff",
     fontSize: 18,
@@ -944,13 +916,11 @@ const styles = StyleSheet.create({
   businessMainTextTablet: {
     fontSize: 22,
   },
-  
   businessSubContainer: {
     flexDirection: "row",
     alignItems: "center",
     flexWrap: "wrap",
   },
-  
   featureTag: {
     flexDirection: "row",
     alignItems: "center",
@@ -962,38 +932,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
   },
-  
-  featureText: {
-    color: "#fff",
-    fontSize: 11,
-    marginLeft: 4,
-    fontWeight: "600",
-  },
-  
-  businessSubText: {
-    color: "rgba(255, 255, 255, 0.85)",
-    fontSize: 13,
-    fontWeight: "500",
-    marginTop: 2,
-  },
-  businessSubTextTablet: {
-    fontSize: 15,
-  },
-  
-  // Arrow container
   businessArrowContainer: {
     alignItems: "center",
     marginLeft: 10,
   },
-  
   exploreText: {
     color: "#FFD700",
     fontSize: 11,
     fontWeight: "600",
     marginTop: 4,
   },
-  
-  // Decorative elements
   decorativeDot1: {
     position: "absolute",
     top: 15,
@@ -1003,7 +951,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: "rgba(255, 255, 255, 0.4)",
   },
-  
   decorativeDot2: {
     position: "absolute",
     bottom: 15,
@@ -1013,22 +960,19 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "rgba(255, 215, 0, 0.4)",
   },
-  
-  // 🏛️ TWO Buttons Container - Government & Parties
   twoButtonsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginHorizontal: 15,
-    marginTop: 5,
+    marginTop: 15,
     marginBottom: 15,
   },
   twoButtonsContainerTablet: {
     marginHorizontal: 30,
-    marginTop: 10,
+    marginTop: 20,
     marginBottom: 20,
   },
-  
   govButton: {
     backgroundColor: "#8B0000",
     paddingVertical: 14,
@@ -1046,7 +990,6 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 12,
   },
-  
   partyButton: {
     backgroundColor: "#8B0000",
     paddingVertical: 14,
@@ -1064,7 +1007,6 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 12,
   },
-  
   twoButtonText: {
     color: "white",
     fontWeight: "700",
@@ -1074,28 +1016,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "800",
   },
-  
-  // 📋 THREE Buttons Row - Complaint, HDRSS, Gallery
- // Add to your StyleSheet:
-
-// Two Buttons Container
-twoButtonsContainer: {
-  flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginHorizontal: 15,
-    marginTop: 15,
-    marginBottom: 15,
-},
-twoButtonsContainerTablet: {
-   marginHorizontal: 30,
-    marginTop: 20,
-    marginBottom: 20,
-},
-
-// Action Button (same for both)
-actionButton: {
-  backgroundColor: "#8B0000",
+  actionButton: {
+    backgroundColor: "#8B0000",
     paddingVertical: 14,
     borderRadius: 8,
     width: "48%",
@@ -1106,22 +1028,20 @@ actionButton: {
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 4,
-},
-actionButtonTablet: {
-  paddingVertical: 18,
-  borderRadius: 12,
-},
-
-// Button Text
-buttonText: {
- color: "white",
-  fontWeight: "700",
-  fontSize: 15,
-},
-buttonTextTablet: {
-   fontSize: 18,
-  fontWeight: "800",
-},
+  },
+  actionButtonTablet: {
+    paddingVertical: 18,
+    borderRadius: 12,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  buttonTextTablet: {
+    fontSize: 18,
+    fontWeight: "800",
+  },
   // Section Titles
   section: { 
     marginTop: 20, 

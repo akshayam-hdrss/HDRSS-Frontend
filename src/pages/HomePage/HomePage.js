@@ -10,6 +10,7 @@ import {
   ScrollView,
   useWindowDimensions,
   StyleSheet,
+  Linking,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,6 +29,9 @@ import { fetchNews } from "../../Controller/NewsController/NewsController";
 import Loader from "../../components/Alert/Loader";
 import CaucusVideo from "../../components/Add/CaucusVideo";
 import ProductScreen1 from "../../pages/ProductItems/ProductScreen1";
+
+// 🚀 COMMAND LINE FLAG TO HIDE GURUKULAM SECTION (set to false to show, true to hide)
+const HIDE_GURUKULAM = true; // Change to false to show Gurukulam section
 
 /* ================= HELPER FUNCTIONS ================= */
 const capitalize = (str) => {
@@ -95,18 +99,10 @@ const dividerStyles = StyleSheet.create({
 /* ================= FEATURES ================= */
 const FEATURES = [
   { id: 0,label: "பஞ்சாங்கம்", image: require("../../../assets/panchagam/panchagam.jpg") },
-  { id: 1, label: "இந்துத்துவா", image: require("../../../assets/hinduthua/hindu.webp") },
   { id: 2, label: "வரலாறு", image: require("../../../assets/Left Swap/history2.png") },
   { id: 3, label: "ஜோதிடம்", image: require("../../../assets/Left Swap/astrology.jpg") },
-  { id: 4, label: "கதைகள்", image: require("../../../assets/Left Swap/Story.jpg") },
-  { id: 5, label: "பூஜை", image: require("../../../assets/Left Swap/poojai.jpg") },
-  { id: 6, label: "யாத்திரை", image: require("../../../assets/Left Swap/tourism1.jpg") },
-  { id: 7, label: "வாஸ்து", image: require("../../../assets/Left Swap/vasthu.jpeg") },
-  { id: 8, label: "மந்திரம்", image: require("../../../assets/home-bg-img/ohm-img.png") },
-  { id: 9, label: "பக்திப் பாடல்கள்", image: require("../../../assets/home-bg-img/ruthurasa-img.png") },
-  { id: 10, label: "நூல்கள்", image: require("../../../assets/hinduthua/Noolgal.jpg") },
-  // { id: 11, label: "மேட்ரிமோனி", image: require("../../../assets/hinduthua/matrimony.png") },
-  // { id: 12, label: "குருகுலம்", image: require("../../../assets/Left Swap/gurukulam.png") }
+  { id: 11, label: "மேட்ரிமோனி", image: require("../../../assets/hinduthua/matrimony.png") },
+  { id: 12, label: "வேலை தளம்", image: require("../../../assets/hinduthua/job.png") }
 ];
 
 const columns = 25; 
@@ -150,7 +146,7 @@ export default function HomePage() {
   const [activeNewsIndex, setActiveNewsIndex] = useState(0);
   const CARD_WIDTH = width - (isTablet ? 40 : 30);
 
-  /* 🗳 ELECTION BUTTON ANIMATION */
+  /* 🗳 ELECTION BUTTON ANIMATION - REMOVED */
   const slideAnim = useRef(new Animated.Value(-300)).current;
 
   useFocusEffect(
@@ -251,6 +247,50 @@ export default function HomePage() {
     );
   }
 
+  // Social Media Links
+  const socialLinks = [
+    {
+      id: 1,
+      name: "YouTube",
+      icon: "logo-youtube",
+      color: "#FF0000",
+      url: "https://www.youtube.com/@Partner-z6k",
+    },
+    {
+      id: 2,
+      name: "Instagram",
+      icon: "logo-instagram",
+      color: "#E4405F",
+      url: "https://www.instagram.com/partner12398/",
+    },
+    {
+      id: 3,
+      name: "Facebook",
+      icon: "logo-facebook",
+      color: "#1877F2",
+      url: "https://www.facebook.com/me/",
+    },
+    {
+      id: 4,
+      name: "LinkedIn",
+      icon: "logo-linkedin",
+      color: "#0A66C2",
+      url: "https://www.linkedin.com/in/partner-team-8044a6431",
+    },
+  ];
+
+  const handleSocialPress = (url) => {
+    // Add https:// if not present
+    let finalUrl = url;
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      finalUrl = "https://" + url;
+    }
+    Linking.openURL(finalUrl).catch((err) => {
+      console.error("Failed to open URL:", err);
+      alert("Unable to open the link. Please try again.");
+    });
+  };
+
   return (
     <View style={styles.container}>
       {/* 🏺 VINTAGE PARCHMENT BASE GRADIENT */}
@@ -300,36 +340,18 @@ export default function HomePage() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <>
-              {/* 🗳 Election Button */}
-              <Animated.View
-                style={[
-                  styles.centerButtonContainer,
-                  { transform: [{ translateX: slideAnim }] },
-                ]}
-              >
-                <TouchableOpacity
-                  // onPress={() => navigation.navigate("Assemblies")}
-                >
-                  <LinearGradient
-                    colors={["#FFD700", "#FF8C00", "#93210A"]}
-                    style={styles.gradientButton}
-                  >
-                    <Text style={styles.gradientButtonText}>
-                      வாகை 2026...
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </Animated.View>
-
               {/* Advertisement Component */}
               <View style={styles.advertisementWrapper}>
                 <Advertisement data={adsData} />
               </View>
 
-              <CaucusVideo/>
-
               {/* District List */}
               <DistrictList data={districtData} />
+              <WaveDivider />
+
+              {/* Caucus Video - placed after District */}
+              <CaucusVideo />
+              <WaveDivider />
             </>
           }
           ListFooterComponent={
@@ -456,6 +478,8 @@ export default function HomePage() {
                         if (item.label === "மந்திரம்") navigation.navigate("SloganPage1",{ name: item.label });
                         if (item.label === "பக்திப் பாடல்கள்") navigation.navigate("DivinePage1",{ name: item.label });
                         if (item.label === "குருகுலம்") navigation.navigate("GurukulamPage1",{name: item.label});
+                        if (item.label === "வேலை தளம்") navigation.navigate("JobPage1");
+
                       }}
                     >
                       <View style={styles.circleCardWrapper}>
@@ -472,79 +496,71 @@ export default function HomePage() {
                 </ScrollView>
               </View>
 
-              <WaveDivider />
+              {/* 🟠 GURUKULAM SECTION - HIDDEN BY COMMAND LINE FLAG */}
+              {!HIDE_GURUKULAM && (
+                <>
+                  <Text style={styles.heading}>Gurukulam</Text>
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => navigation.navigate("Gurukulamcategory")}
+                    style={styles.gurukulamBannerWrapper}
+                  >
+                    <LinearGradient
+                      colors={["#8B1A1A", "#B33A1E", "#E07A2C"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.gurukulamBanner}
+                    >
+                      {/* decorative circles */}
+                      <View style={styles.gurukulamDecorCircle1} />
+                      <View style={styles.gurukulamDecorCircle2} />
 
-              {/* 💍 MATRIMONY SECTION */}
-              <Text style={styles.heading}>Matrimony</Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate("matrimonyBtn")}
-                activeOpacity={0.9}
-                style={styles.matrimonyBannerWrapper}
-              >
-                <LinearGradient
-                  colors={['#FFF3D9', '#F0CE8C']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.matrimonyBanner}
-                >
-                  <View style={styles.matrimonyBannerLeft}>
-                    <Text style={styles.matrimonyBannerSubtitle}>
-                      Find Your Perfect Life Partner
-                    </Text>
+                      <View style={styles.gurukulamBannerLeft}>
+                        <View style={styles.gurukulamBadge}>
+                          <Text style={styles.gurukulamBadgeText}>✦ பாரம்பரிய கல்வி</Text>
+                        </View>
 
-                    <View style={styles.matrimonyExploreButton}>
-                      <Text style={styles.matrimonyExploreButtonText}>Explore Matrimony</Text>
-                      <Ionicons name="arrow-forward" size={isTablet ? 18 : 14} color="#fff" />
-                    </View>
-                  </View>
+                        <Text style={styles.gurukulamBannerTitle}>
+                          {GURUKULAM_HOME_CARD.title}
+                        </Text>
 
-                  <Image
-                    source={require("../../../assets/hinduthua/matrimony.png")}
-                    style={styles.matrimonyBannerImage}
-                  />
-                </LinearGradient>
-              </TouchableOpacity>
+                        <View style={styles.gurukulamExploreButton}>
+                          <Text style={styles.gurukulamExploreButtonText}>Explore Gurukulam</Text>
+                          <Ionicons name="arrow-forward" size={isTablet ? 18 : 14} color="#8B1A1A" />
+                        </View>
+                      </View>
 
-              <WaveDivider />
+                      <Image
+                        source={GURUKULAM_HOME_CARD.image}
+                        style={styles.gurukulamBannerImage}
+                      />
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </>
+              )}
 
-              {/* 🟠 GURUKULAM SECTION - resized to match Matrimony banner */}
-              <Text style={styles.heading}>Gurukulam</Text>
-              <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => navigation.navigate("Gurukulamcategory")}
-                style={styles.gurukulamBannerWrapper}
-              >
-                <LinearGradient
-                  colors={["#8B1A1A", "#B33A1E", "#E07A2C"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.gurukulamBanner}
-                >
-                  {/* decorative circles */}
-                  <View style={styles.gurukulamDecorCircle1} />
-                  <View style={styles.gurukulamDecorCircle2} />
+              {/* 🌐 SOCIAL MEDIA SECTION */}
+              <View style={styles.socialSectionContainer}>
+                <WaveDivider />
+                <Text style={[styles.heading, styles.socialHeading]}>Follow Us</Text>
 
-                  <View style={styles.gurukulamBannerLeft}>
-                    <View style={styles.gurukulamBadge}>
-                      <Text style={styles.gurukulamBadgeText}>✦ பாரம்பரிய கல்வி</Text>
-                    </View>
-
-                    <Text style={styles.gurukulamBannerTitle}>
-                      {GURUKULAM_HOME_CARD.title}
-                    </Text>
-
-                    <View style={styles.gurukulamExploreButton}>
-                      <Text style={styles.gurukulamExploreButtonText}>Explore Gurukulam</Text>
-                      <Ionicons name="arrow-forward" size={isTablet ? 18 : 14} color="#8B1A1A" />
-                    </View>
-                  </View>
-
-                  <Image
-                    source={GURUKULAM_HOME_CARD.image}
-                    style={styles.gurukulamBannerImage}
-                  />
-                </LinearGradient>
-              </TouchableOpacity>
+                <View style={styles.socialIconsContainer}>
+                  {socialLinks.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.socialIconWrapper}
+                      onPress={() => handleSocialPress(item.url)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name={item.icon}
+                        size={isTablet ? 26 : 22}
+                        color={item.color}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
             </>
           }
         />
@@ -594,25 +610,8 @@ const getStyles = (isTablet, width) =>
       backgroundColor: "rgba(250, 235, 200, 0.55)",
     },
 
-    centerButtonContainer: {
-      alignItems: "center",
-      marginTop: isTablet ? 25 : 14,
-    },
-
-    gradientButton: {
-      paddingVertical: isTablet ? 18 : 12,
-      paddingHorizontal: isTablet ? 55 : 30,
-      borderRadius: 10,
-    },
-
-    gradientButtonText: {
-      color: "#fff",
-      fontSize: isTablet ? 22 : 19,
-      fontWeight: "900",
-    },
-
     advertisementWrapper: {
-      marginVertical: isTablet ? 25 : 15,
+      marginVertical: isTablet ? 10 : 8,
     },
 
     /* ================= NEWS SECTION STYLES ================= */
@@ -629,14 +628,6 @@ const getStyles = (isTablet, width) =>
       fontWeight: "bold",
       color: "#93210A",
       marginLeft: 15,
-    },
-
-    headingUnderline: {
-      width: 34,
-      height: 3,
-      backgroundColor: "#93210A",
-      borderRadius: 2,
-      marginTop: 4,
     },
 
     seeAllBtn: {
@@ -779,65 +770,7 @@ const getStyles = (isTablet, width) =>
       fontWeight: "600",
     },
 
-    /* ================= MATRIMONY STYLES ================= */
-    matrimonyBannerWrapper: {
-      marginHorizontal: 15,
-      marginTop: 22,
-      marginBottom: 8,
-      borderRadius: 14,
-      overflow: "hidden",
-      borderWidth: 1.5,
-      borderColor: "#B8860B",
-      elevation: 4,
-      shadowColor: "#301913",
-      shadowOpacity: 0.15,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: 3 },
-    },
-
-    matrimonyBanner: {
-      flexDirection: "row",
-      alignItems: "center",
-      padding: isTablet ? 22 : 14,
-    },
-
-    matrimonyBannerLeft: {
-      flex: 1,
-      paddingRight: 10,
-    },
-
-    matrimonyBannerSubtitle: {
-      fontSize: isTablet ? 15 : 12,
-      color: "#8B5E34",
-      marginTop: 4,
-      marginBottom: 12,
-    },
-
-    matrimonyExploreButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      alignSelf: "flex-start",
-      backgroundColor: "#6B0F1D",
-      paddingVertical: isTablet ? 10 : 7,
-      paddingHorizontal: isTablet ? 20 : 14,
-      borderRadius: 22,
-      gap: 6,
-    },
-
-    matrimonyExploreButtonText: {
-      color: "#FFF3D9",
-      fontSize: isTablet ? 14 : 12,
-      fontWeight: "700",
-    },
-
-    matrimonyBannerImage: {
-      width: isTablet ? 130 : 90,
-      height: isTablet ? 130 : 90,
-      borderRadius: 65,
-    },
-
-    /* ================= GURUKULAM STYLES (matched to Matrimony banner size) ================= */
+    /* ================= GURUKULAM STYLES ================= */
     gurukulamBannerWrapper: {
       marginHorizontal: 15,
       marginTop: 14,
@@ -934,5 +867,31 @@ const getStyles = (isTablet, width) =>
       borderRadius: 65,
       borderWidth: 2,
       borderColor: "#FFE9C4",
+    },
+
+    /* ================= SOCIAL MEDIA SECTION STYLES ================= */
+    socialSectionContainer: {
+      marginTop: 10,
+      marginBottom: 20,
+      paddingHorizontal: 15,
+    },
+
+    socialHeading: {
+      textAlign: "center",
+      marginLeft: 0,
+      marginBottom: 14,
+    },
+
+    socialIconsContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      gap: isTablet ? 22 : 18,
+    },
+
+    socialIconWrapper: {
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 6,
     },
   });

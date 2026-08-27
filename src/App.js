@@ -154,6 +154,7 @@ import ProductScreenOrderConfirm from "./pages/ProductItems/ProductScreenOrderCo
 import ProductScreenOrder from "./pages/ProductItems/ProductScreenOrder.js";
 import AllEventsPage from "./components/Events/EventPage1all events.js";
 import Gurukulamcategory from "./pages/Gurukulam/Gurukulamcategory.js";
+import DistrictBusinessVideos from "./components/Add/DistrictBusinessVideos.js";
 
 
 
@@ -338,6 +339,7 @@ function MainStackScreen() {
     {/* <MainStack.Screen name="ProductScreenCardHeader" component={withFooter(ProductScreenCartHeader)}/> */}
     <MainStack.Screen name="ProductScreenOrder" component={withFooter(ProductScreenOrder)}/>
      <MainStack.Screen name="EventPage1all events" component={withFooter(AllEventsPage)}/>
+     <MainStack.Screen name="DistrictBusinessVideos" component={withFooter(DistrictBusinessVideos)}/>
 
     </MainStack.Navigator>
   );

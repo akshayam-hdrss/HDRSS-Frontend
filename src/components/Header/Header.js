@@ -8,10 +8,13 @@ import {
   Image,
 } from "react-native";
 import * as Font from "expo-font";
+import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 export default function Header({ toggleSidebar }) {
   const [fontLoaded, setFontLoaded] = useState(false);
   const { width } = useWindowDimensions();
+  const navigation = useNavigation();
 
   const isTablet = width >= 600;
 
@@ -46,6 +49,11 @@ export default function Header({ toggleSidebar }) {
     }
   };
 
+  const handleProfilePress = () => {
+    console.log('Profile pressed');
+    navigation.navigate("Profile");
+  };
+
   return (
     <View style={[styles.header, isTablet && styles.headerTablet]}>
       {/* Menu - left side */}
@@ -68,8 +76,18 @@ export default function Header({ toggleSidebar }) {
         />
       </View>
 
-      {/* Right side spacer - keeps title centered */}
-      <View style={styles.menuWrapper} />
+      {/* Right side - Profile Icon */}
+      <TouchableOpacity 
+        onPress={handleProfilePress}
+        style={styles.profileWrapper}
+        activeOpacity={0.7}
+      >
+        <FontAwesome
+          name="user-circle-o"
+          size={isTablet ? 36 : 34}
+          color="#fff"
+        />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -130,11 +148,18 @@ const styles = StyleSheet.create({
     width: 200, // Adjusted for better display
     height: 65,
     marginTop: 25,
-     marginLeft: 25,
+    marginLeft: 5,
   },
 
   partnerImageTablet: {
     width: 280,
     height: 60,
+  },
+
+  /* PROFILE ICON (RIGHT SIDE) */
+  profileWrapper: {
+    width: 50, // Increased width for better touch area
+    marginTop: 25,
+    marginLeft:5, // Added padding for better touch
   },
 });

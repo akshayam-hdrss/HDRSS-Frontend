@@ -13,7 +13,8 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 
-const YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@hdrsssandilyan";
+// Updated YouTube Channel URL
+const YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@Partner-z6k";
 
 export default function Sidebar({ closeSidebar }) {
   const { width: screenWidth } = useWindowDimensions();
@@ -26,13 +27,14 @@ export default function Sidebar({ closeSidebar }) {
   const items = [
     { label: "Home",              icon: "home",             screen: "HomePage"    },
     { label: "About",             icon: "info",             screen: "AboutPage1"  },
-    { label: "Principles",        icon: "scale",            screen: "Principles"  },
-    { label: "Quiz",              icon: "help",             screen: "QuizCategories" },
-    { label: "Charities",         icon: "volunteer-activism",screen: "CharitiePage1"},
-    { label: "HDRSS Leader",      icon: "person",           screen: "Member"      },
-    { label: "Membership Form",   icon: "assignment",       screen: "Member1"     },
-    { label: "2026 Election Survey", icon: "how-to-vote",   screen: "Assemblies"  },
-    { label: "Job Opportunities", icon: "work",             screen: "JobPage1"    },
+    // { label: "Principles",        icon: "scale",            screen: "Principles"  },
+    // { label: "Quiz",              icon: "help",             screen: "QuizCategories" },
+    // { label: "Charities",         icon: "volunteer-activism",screen: "CharitiePage1"},
+    // { label: "HDRSS Leader",      icon: "person",           screen: "Member"      },
+    // { label: "Membership Form",   icon: "assignment",       screen: "Member1"     },
+    // { label: "2026 Election Survey", icon: "how-to-vote",   screen: "Assemblies"  },
+    // { label: "Job Opportunities", icon: "work",             screen: "JobPage1"    },
+    { label: "Business Video",    icon: "videocam",   screen: "DistrictBusinessVideos"  },
     { label: "Events History",    icon: "history",          screen: "EventMonth"  },
     { label: "News History",      icon: "article",          screen: "NewsMonth"  },
   ];
