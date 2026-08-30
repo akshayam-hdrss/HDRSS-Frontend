@@ -1,19 +1,17 @@
 {
   "expo": {
     "name": "PARTNER",
-    "slug": "hdrssfrontent",
+    "slug": "partner",
     "version": "1.2.7",
     "orientation": "portrait",
     "icon": "./assets/Header/partnerapp logo.jpeg",
     "scheme": "hdrss",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-
     "ios": {
       "supportsTablet": true,
       "buildNumber": "3"
     },
-
     "android": {
       "icon": "./assets/Header/partnerapp logo.jpeg",
       "adaptiveIcon": {
@@ -36,11 +34,9 @@
         "android.permission.WRITE_CALENDAR"
       ]
     },
-
     "web": {
       "favicon": "./assets/Header/partnerapp logo.jpeg"
     },
-
     "plugins": [
       [
         "expo-splash-screen",
@@ -63,16 +59,15 @@
       "expo-asset",
       "expo-video"
     ],
-
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
-
     "extra": {
       "eas": {
-        "projectId": "5e8a1431-48c4-4a8d-b3fe-b34cd2788887"
+        "projectId": "c465e856-8faa-4ab6-b4c0-eb933bdb38d3"
       }
-    }
+    },
+    "owner": "mohan-2026s-team"
   }
 }
