@@ -21,7 +21,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
-      "package": "com.aktechnologies.hdrss.partner",
+      "package": "com.aktechnologies.hdrsspartner", 
       "versionCode": 14,
       "networkSecurityConfig": "./network_security_config.xml",
       "permissions": [
