@@ -244,7 +244,7 @@ export default function DistrictBusinessPage1() {
         </TouchableOpacity>
 
         <Text style={[styles.appBarTitle, isTablet && styles.appBarTitleTablet]}>
-          {businessName} Business
+          {businessName} 
         </Text>
 
         <View style={{ width: isTablet ? 40 : 30 }} />
